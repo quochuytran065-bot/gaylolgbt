@@ -1,0 +1,6 @@
+{
+  "name": "EduViet - Học Tập & Thi Trực Tuyến",
+  "description": "Nền tảng học tập trực tuyến: xem tài liệu phân loại theo môn/lớp, làm bài thi trắc nghiệm bấm giờ, chấm điểm tự động và xem lại đáp án chi tiết.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

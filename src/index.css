@@ -1,0 +1,502 @@
+@import "tailwindcss";
+
+/* ============================================================
+   EDUVIET DESIGN SYSTEM v2 — index.css
+   Inspired by: Carbon (IBM), Primer (GitHub), Atlassian Design System, Polaris (Shopify)
+   ─────────────────────────────────────────────────────────────
+   Typography:   Be Vietnam Pro + Inter (loaded in index.html)
+   Color rule:   60% neutral · 30% secondary · 10% primary
+   Spacing:      4px base grid (consistent increments)
+   Motion:       Reduced, purposeful — not decorative
+   ============================================================ */
+
+/* ─── Design Tokens ─────────────────────────────────────────── */
+@layer base {
+  :root {
+    /* Fonts */
+    --font-sans: 'Be Vietnam Pro', 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+    /* Brand palette */
+    --color-brand-50:  #f0f9ff;
+    --color-brand-100: #e0f2fe;
+    --color-brand-500: #0ea5e9;
+    --color-brand-600: #0284c7;
+    --color-brand-700: #0369a1;
+    --color-brand-900: #0c4a6e;
+
+    /* Surface layers (Light) — like Atlassian "elevation" */
+    --surface-base:    #f8fafc;   /* page background */
+    --surface-raised:  #ffffff;   /* cards */
+    --surface-overlay: #ffffff;   /* modals, dropdowns */
+    --surface-sunken:  #f1f5f9;   /* inset sections, code blocks */
+
+    /* Border */
+    --border-subtle:   #e2e8f0;
+    --border-default:  #cbd5e1;
+    --border-strong:   #94a3b8;
+
+    /* Text scale */
+    --text-primary:    #0f172a;
+    --text-secondary:  #475569;
+    --text-tertiary:   #94a3b8;
+    --text-disabled:   #cbd5e1;
+
+    /* Radius — consistent rounding */
+    --radius-xs:   4px;
+    --radius-sm:   6px;
+    --radius-md:   10px;
+    --radius-card: 14px;
+    --radius-lg:   18px;
+    --radius-xl:   24px;
+    --radius-full: 9999px;
+
+    /* Shadow — layered, soft (GitHub Primer style) */
+    --shadow-xs:   0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm:   0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md:   0 4px 12px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
+    --shadow-lg:   0 10px 30px rgba(15, 23, 42, 0.10), 0 4px 10px rgba(15, 23, 42, 0.06);
+    --shadow-card: var(--shadow-sm);
+    --shadow-card-hover: var(--shadow-md);
+
+    /* Motion */
+    --duration-fast:   120ms;
+    --duration-base:   200ms;
+    --duration-slow:   350ms;
+    --ease-out:   cubic-bezier(0.0, 0.0, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+    --transition: var(--duration-base) var(--ease-in-out);
+  }
+
+  /* ── Dark mode tokens ─────────────────────────────────────── */
+  html.dark {
+    color-scheme: dark;
+
+    --surface-base:    #0f1623;
+    --surface-raised:  #1a2236;
+    --surface-overlay: #1e2940;
+    --surface-sunken:  #0a101a;
+
+    --border-subtle:   #1e2d45;
+    --border-default:  #2d3f5c;
+    --border-strong:   #3d5070;
+
+    --text-primary:    #f1f5f9;
+    --text-secondary:  #94a3b8;
+    --text-tertiary:   #64748b;
+
+    --shadow-card:       0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-card-hover: 0 6px 20px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  /* ── Base resets ──────────────────────────────────────────── */
+  html {
+    font-family: var(--font-sans);
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+    /* Prevent layout shift from scrollbar */
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    background-color: var(--surface-base);
+    transition: background-color var(--duration-slow) var(--ease-in-out),
+                color var(--duration-slow) var(--ease-in-out);
+    line-height: 1.6;
+  }
+
+  /* ── Heading class ────────────────────────────────────────── */
+  .font-heading {
+    font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
+    letter-spacing: -0.025em;
+    font-feature-settings: "kern" 1;
+  }
+
+  /* ── Focus ring (Accessibility — inspired by GitHub Primer) ─ */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  /* ── Selection color ─────────────────────────────────────── */
+  ::selection {
+    background-color: #bae6fd;
+    color: #0c4a6e;
+  }
+  html.dark ::selection {
+    background-color: #0369a1;
+    color: #f0f9ff;
+  }
+}
+
+/* ============================================================
+   CARD SYSTEM — Primer-inspired surface + hover lift
+   ============================================================ */
+
+.ev-card {
+  background-color: var(--surface-raised);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-in-out);
+  will-change: transform;
+}
+
+.ev-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--border-default);
+}
+
+.ev-card:active {
+  transform: translateY(-1px);
+  transition-duration: var(--duration-fast);
+}
+
+/* ============================================================
+   SKELETON LOADING — shimmer (Coursera / Carbon style)
+   ============================================================ */
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    #e9edf2 0px,
+    #f4f6f9 160px,
+    #e9edf2 320px
+  );
+  background-size: 1200px 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+html.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    #1a2236 0px,
+    #243050 160px,
+    #1a2236 320px
+  );
+  background-size: 1200px 100%;
+}
+
+/* ============================================================
+   PROGRESS BAR — slide-in animation
+   ============================================================ */
+
+@keyframes progress-grow {
+  from { width: 0%; }
+  to   { width: var(--progress-target, 100%); }
+}
+
+.ev-progress-bar {
+  animation: progress-grow 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ============================================================
+   FADE-IN — page sections entry
+   ============================================================ */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ev-fade-up {
+  animation: fade-up var(--duration-slow) var(--ease-out) forwards;
+}
+
+/* Stagger children */
+.ev-fade-up-1 { animation-delay: 0ms; }
+.ev-fade-up-2 { animation-delay: 60ms; }
+.ev-fade-up-3 { animation-delay: 120ms; }
+.ev-fade-up-4 { animation-delay: 180ms; }
+
+/* ============================================================
+   BADGE / PILL — consistent micro-labels
+   ============================================================ */
+
+.ev-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   BUTTON SYSTEM — Carbon-inspired
+   ============================================================ */
+
+.ev-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+  border: 1px solid transparent;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ev-btn:active {
+  transform: scale(0.97);
+  transition-duration: 60ms;
+}
+
+.ev-btn-primary {
+  background-color: var(--color-brand-700);
+  color: #ffffff;
+  border-color: var(--color-brand-700);
+  box-shadow: 0 1px 3px rgba(3, 105, 161, 0.3);
+}
+
+.ev-btn-primary:hover {
+  background-color: var(--color-brand-900);
+  box-shadow: 0 4px 12px rgba(3, 105, 161, 0.35);
+}
+
+.ev-btn-secondary {
+  background-color: var(--surface-raised);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  box-shadow: var(--shadow-xs);
+}
+
+.ev-btn-secondary:hover {
+  background-color: var(--surface-sunken);
+  border-color: var(--border-strong);
+}
+
+/* ============================================================
+   INPUT SYSTEM — Atlassian-inspired
+   ============================================================ */
+
+.ev-input {
+  width: 100%;
+  padding: 8px 14px;
+  background-color: var(--surface-sunken);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text-primary);
+  transition:
+    border-color var(--duration-base) var(--ease-in-out),
+    background-color var(--duration-base) var(--ease-in-out),
+    box-shadow var(--duration-base) var(--ease-in-out);
+  outline: none;
+}
+
+.ev-input:hover {
+  border-color: var(--border-default);
+}
+
+.ev-input:focus {
+  background-color: var(--surface-raised);
+  border-color: var(--color-brand-600);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+html.dark .ev-input {
+  background-color: var(--surface-sunken);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+/* ============================================================
+   SURFACE TINTS — for stats / info cards
+   ============================================================ */
+
+.ev-surface-brand  { background: linear-gradient(135deg, #f0f9ff, #e0f2fe); }
+.ev-surface-green  { background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
+.ev-surface-amber  { background: linear-gradient(135deg, #fffbeb, #fef3c7); }
+.ev-surface-purple { background: linear-gradient(135deg, #faf5ff, #ede9fe); }
+.ev-surface-rose   { background: linear-gradient(135deg, #fff1f2, #ffe4e6); }
+
+html.dark .ev-surface-brand  { background: linear-gradient(135deg, #0c1d2e, #0e2742); }
+html.dark .ev-surface-green  { background: linear-gradient(135deg, #052e16, #0a3d20); }
+html.dark .ev-surface-amber  { background: linear-gradient(135deg, #1c1400, #2a1f00); }
+html.dark .ev-surface-purple { background: linear-gradient(135deg, #1a0533, #22073f); }
+html.dark .ev-surface-rose   { background: linear-gradient(135deg, #200010, #310018); }
+
+/* ============================================================
+   NAV LINK — active indicator underline animation
+   ============================================================ */
+
+.ev-nav-link {
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.ev-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 1px;
+  background-color: var(--color-brand-600);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.ev-nav-link.active::after,
+.ev-nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* ============================================================
+   DIVIDER
+   ============================================================ */
+
+.ev-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+  border: none;
+  margin: 0;
+}
+
+/* ============================================================
+   GLASSMORPHISM — for header/modal overlays
+   ============================================================ */
+
+.ev-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+html.dark .ev-glass {
+  background: rgba(15, 22, 35, 0.88);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ============================================================
+   STAT NUMBER — animated counting feel
+   ============================================================ */
+
+@keyframes num-pop {
+  0%   { transform: scale(0.85); opacity: 0; }
+  60%  { transform: scale(1.05); }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+.ev-stat-number {
+  animation: num-pop var(--duration-slow) var(--ease-out) forwards;
+}
+
+/* ============================================================
+   SCROLLBAR — thin & elegant
+   ============================================================ */
+
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: var(--radius-full);
+  transition: background var(--duration-base);
+}
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+html.dark ::-webkit-scrollbar-thumb       { background: #334155; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+/* ============================================================
+   DARK MODE UTILITY OVERRIDES
+   ============================================================ */
+
+html.dark .dm-bg          { background-color: var(--surface-base); }
+html.dark .dm-bg-card     { background-color: var(--surface-raised); }
+html.dark .dm-bg-subtle   { background-color: var(--surface-sunken); }
+html.dark .dm-border      { border-color: var(--border-default); }
+html.dark .dm-text        { color: var(--text-primary); }
+html.dark .dm-text-muted  { color: var(--text-secondary); }
+
+/* ============================================================
+   TOOLTIP (pure CSS) — Atlassian style
+   ============================================================ */
+
+[data-tip] {
+  position: relative;
+}
+
+[data-tip]::before {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #f1f5f9;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-out),
+              transform var(--duration-base) var(--ease-out);
+  transform: translateX(-50%) translateY(4px);
+  z-index: 100;
+}
+
+[data-tip]:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================================
+   RESPONSIVE — Mobile-first tweaks
+   ============================================================ */
+
+@media (max-width: 640px) {
+  .ev-card:hover { transform: none; }   /* Disable lift on touch */
+}
+
+/* ============================================================
+   PRINT — hide decorative chrome
+   ============================================================ */
+
+@media print {
+  .ev-card { box-shadow: none; border: 1px solid #ddd; }
+  header, footer, nav { display: none; }
+}
