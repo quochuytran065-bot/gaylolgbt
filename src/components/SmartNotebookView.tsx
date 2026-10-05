@@ -127,8 +127,8 @@ export const SmartNotebookView: React.FC<SmartNotebookViewProps> = ({ onStartPra
       const matchSubject = selectedSubject === 'Tất cả môn' || item.subject === selectedSubject;
       const matchSearch = !search || 
         item.title.toLowerCase().includes(search.toLowerCase()) ||
-        item.front.toLowerCase().includes(search.toLowerCase()) ||
-        item.back.toLowerCase().includes(search.toLowerCase()) ||
+        (item.front || item.content || '').toLowerCase().includes(search.toLowerCase()) ||
+        (item.back || item.explanation || '').toLowerCase().includes(search.toLowerCase()) ||
         (item.category && item.category.toLowerCase().includes(search.toLowerCase()));
 
       return matchType && matchSubject && matchSearch;
@@ -360,7 +360,7 @@ export const SmartNotebookView: React.FC<SmartNotebookViewProps> = ({ onStartPra
                   </h3>
 
                   <div className="text-xs leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line font-medium p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                    {isFlipped ? item.back : item.front}
+                    {isFlipped ? (item.back || item.explanation) : (item.front || item.content)}
                   </div>
 
                   {isFlipped && item.exampleOrNote && (

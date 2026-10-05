@@ -93,7 +93,7 @@ export interface Question {
   explanation: string;
   topic?: string;
   difficulty?: 'Nhận biết' | 'Thông hiểu' | 'Vận dụng' | 'Vận dụng cao';
-  errorCategory?: 'Lý thuyết' | 'Tính toán' | 'Bẫy đề thi' | 'Phương pháp';
+  errorCategory?: 'Lý thuyết' | 'Tính toán' | 'Bẫy đề thi' | 'Phương pháp' | 'Ngữ pháp';
   // Chú thích sai ở đâu:
   whyWrongMap?: Record<string, string>; // Map từ đáp án sai A/B/C/D hoặc ý sai a/b/c/d sang giải thích vì sao sai
   mistakeAdvice?: string; // Lời khuyên & cạm bẫy thường gặp
@@ -107,7 +107,7 @@ export interface Exam {
   subject: Subject;
   grade: GradeLevel;
   durationMinutes: number; // e.g. 50, 90
-  difficulty: 'Cơ bản' | 'Khá' | 'Nâng cao' | 'Thi thử THPT' | 'Format Chuẩn BGD 2025' | 'Thi thử THPT Chuẩn Hóa';
+  difficulty: 'Cơ bản' | 'Khá' | 'Nâng cao' | 'Thi thử THPT' | 'Format Chuẩn BGD 2025' | 'Thi thử THPT Chuẩn Hóa' | 'Trường Chuyên' | 'HSG Quốc Gia' | string;
   isBGDFormat?: boolean; // Đề thi theo cấu trúc mới Bộ Giáo Dục 2025/2026
   examCode?: string; // Mã đề: Mã 101, Mã 204...
   questions: Question[];
@@ -187,7 +187,7 @@ export interface SubjectOverview {
 }
 
 // ─── Sổ tay Từ Vựng & Công Thức ──────────────────────────────────
-export type NotebookEntryType = 'formula' | 'vocab' | 'question';
+export type NotebookEntryType = 'formula' | 'vocab' | 'question' | 'difficult_question';
 
 export interface NotebookEntry {
   id: string;
@@ -195,12 +195,18 @@ export interface NotebookEntry {
   subject: Subject;
   grade: GradeLevel;
   title: string;
-  front: string; // Mặt trước flashcard (từ vựng / tên công thức / câu hỏi)
-  back: string;  // Mặt sau flashcard (nghĩa & phiên âm / công thức toán học / đáp án & lời giải)
+  front?: string; // Mặt trước flashcard (từ vựng / tên công thức / câu hỏi)
+  back?: string;  // Mặt sau flashcard (nghĩa & phiên âm / công thức toán học / đáp án & lời giải)
+  content?: string;
+  keyFormula?: string;
+  explanation?: string;
+  source?: string;
+  mastered?: boolean;
+  createdAt?: string;
   exampleOrNote?: string;
   category?: string;
-  isMastered: boolean; // Đã thuộc hay chưa
-  savedAt: string;
+  isMastered?: boolean; // Đã thuộc hay chưa
+  savedAt?: string;
   originalQuestion?: Question;
 }
 
