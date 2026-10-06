@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   GraduationCap,
   Play,
@@ -20,7 +20,9 @@ import {
   RotateCcw,
   Lightbulb,
   FileText,
-  AlertCircle
+  AlertCircle,
+  PlusCircle,
+  UploadCloud
 } from 'lucide-react';
 import { Course, CourseLesson, CourseCertificate } from '../types';
 import { INITIAL_COURSES } from '../data/learningPlatformData';
@@ -36,25 +38,27 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'H�
     try {
       const saved = localStorage.getItem('eduviet_courses');
       if (saved) {
-        const parsed = JSON.parse(saved) as Course[];
-        const completedMap = new Set<string>();
-        for (const c of parsed) {
-          for (const chap of c.chapters || []) {
-            for (const les of chap.lessons || []) {
-              if (les.isCompleted) completedMap.add(`${c.id}-${les.id}`);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const completedMap = new Set<string>();
+          for (const c of parsed) {
+            for (const chap of (c?.chapters || [])) {
+              for (const les of (chap?.lessons || [])) {
+                if (les?.isCompleted) completedMap.add(`${c?.id}-${les?.id}`);
+              }
             }
           }
-        }
-        return INITIAL_COURSES.map(course => ({
-          ...course,
-          chapters: course.chapters.map(chap => ({
-            ...chap,
-            lessons: chap.lessons.map(les => ({
-              ...les,
-              isCompleted: completedMap.has(`${course.id}-${les.id}`) || !!les.isCompleted,
+          return INITIAL_COURSES.map(course => ({
+            ...course,
+            chapters: (course.chapters || []).map(chap => ({
+              ...chap,
+              lessons: (chap.lessons || []).map(les => ({
+                ...les,
+                isCompleted: completedMap.has(`${course.id}-${les.id}`) || !!les?.isCompleted,
+              })),
             })),
-          })),
-        }));
+          }));
+        }
       }
     } catch { /* noop */ }
     return INITIAL_COURSES;
@@ -70,6 +74,64 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'H�
 
   // Certificate Modal State
   const [activeCertificate, setActiveCertificate] = useState<CourseCertificate | null>(null);
+
+  // Empire / Custom Lesson Import Modal State
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importTitle, setImportTitle] = useState('');
+  const [importVideoUrl, setImportVideoUrl] = useState('');
+  const [importCourseId, setImportCourseId] = useState(courses[0]?.id || 'course-empire-toan-12');
+  const [importSummary, setImportSummary] = useState('');
+  const [importDuration, setImportDuration] = useState('45');
+
+  // Import custom lesson from Empire / Drive / YouTube
+  const handleImportEmpireLesson = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!importTitle.trim() || !importVideoUrl.trim()) {
+      alert('Vui lòng nhập tên bài giảng và đường dẫn video!');
+      return;
+    }
+
+    const newLesson: CourseLesson = {
+      id: `les-custom-${Date.now()}`,
+      title: importTitle.trim(),
+      durationMinutes: parseInt(importDuration) || 45,
+      videoUrl: importVideoUrl.trim(),
+      youtubeWatchUrl: importVideoUrl.trim().includes('youtube.com') || importVideoUrl.trim().includes('youtu.be') ? importVideoUrl.trim() : undefined,
+      summary: importSummary.trim() || 'Bài giảng tích hợp từ tài khoản Empire / nguồn cá nhân.',
+      isCompleted: false,
+    };
+
+    const targetCourse = courses.find(c => c.id === importCourseId) || courses[0];
+    const updated = courses.map(c => {
+      if (c.id === (targetCourse?.id || importCourseId)) {
+        const firstChap = c.chapters[0] || { id: 'chap-custom', title: 'Chuyên Đề: Bài giảng tự nhập', lessons: [] };
+        const updatedFirstChap = {
+          ...firstChap,
+          lessons: [newLesson, ...firstChap.lessons]
+        };
+        return {
+          ...c,
+          totalLessons: c.totalLessons + 1,
+          chapters: [updatedFirstChap, ...c.chapters.slice(1)]
+        };
+      }
+      return c;
+    });
+
+    saveCourses(updated);
+    setIsImportModalOpen(false);
+    setImportTitle('');
+    setImportVideoUrl('');
+    setImportSummary('');
+
+    // Select this lesson for immediate watching
+    const refreshedCourse = updated.find(c => c.id === (targetCourse?.id || importCourseId));
+    if (refreshedCourse) {
+      setSelectedCourse(refreshedCourse);
+      setSelectedLesson(newLesson);
+    }
+    alert('Đã thêm bài giảng thành công! Bạn có thể xem ngay bây giờ.');
+  };
 
   const saveCourses = (updated: Course[]) => {
     setCourses(updated);

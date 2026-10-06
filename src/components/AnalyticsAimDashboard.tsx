@@ -88,12 +88,14 @@ export const AnalyticsAimDashboard: React.FC<AnalyticsAimDashboardProps> = ({
     try {
       const saved = localStorage.getItem('eduviet_study_goal');
       if (saved) {
-        const parsed: StudyGoal = JSON.parse(saved);
-        if (new Date(parsed.targetDate).getTime() < Date.now() || parsed.targetDate.includes('2027-06-25')) {
-          localStorage.setItem('eduviet_study_goal', JSON.stringify(DEFAULT_STUDY_GOAL));
-          return DEFAULT_STUDY_GOAL;
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object' && typeof parsed.targetDate === 'string') {
+          if (new Date(parsed.targetDate).getTime() < Date.now() || parsed.targetDate.includes('2027-06-25')) {
+            localStorage.setItem('eduviet_study_goal', JSON.stringify(DEFAULT_STUDY_GOAL));
+            return DEFAULT_STUDY_GOAL;
+          }
+          return parsed;
         }
-        return parsed;
       }
     } catch {
       // fallback

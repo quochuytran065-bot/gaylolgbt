@@ -69,13 +69,15 @@ function MainApp() {
     try {
       const saved = localStorage.getItem('eduviet_study_goal');
       if (saved) {
-        const parsed: StudyGoal = JSON.parse(saved);
-        // If saved date is in the past, or old 2027-06-25 date, migrate to 2027-11-12
-        if (new Date(parsed.targetDate).getTime() < Date.now() || parsed.targetDate.includes('2027-06-25')) {
-          localStorage.setItem('eduviet_study_goal', JSON.stringify(DEFAULT_STUDY_GOAL));
-          return DEFAULT_STUDY_GOAL;
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object' && typeof parsed.targetDate === 'string') {
+          // If saved date is in the past, or old 2027-06-25 date, migrate to 2027-11-12
+          if (new Date(parsed.targetDate).getTime() < Date.now() || parsed.targetDate.includes('2027-06-25')) {
+            localStorage.setItem('eduviet_study_goal', JSON.stringify(DEFAULT_STUDY_GOAL));
+            return DEFAULT_STUDY_GOAL;
+          }
+          return parsed;
         }
-        return parsed;
       }
     } catch {
       // fallback
