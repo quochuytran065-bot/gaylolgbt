@@ -8,6 +8,7 @@ import { ExamList } from './components/ExamList';
 import { ExamTakingView } from './components/ExamTakingView';
 import { ExamResultView } from './components/ExamResultView';
 import { AnalyticsAimDashboard } from './components/AnalyticsAimDashboard';
+import { DGNLHubView } from './components/DGNLHubView';
 import { CoursesView } from './components/CoursesView';
 import { GamificationArenaView } from './components/GamificationArenaView';
 import { SmartNotebookView } from './components/SmartNotebookView';
@@ -241,6 +242,13 @@ function MainApp() {
                 onSelectTab={setActiveTab}
                 onSelectDocument={(doc) => setSelectedDocument(doc)}
                 onStartExam={handleStartExam}
+              />
+            )}
+
+            {activeTab === 'dgnl' && (
+              <DGNLHubView
+                onTakeExam={handleStartExam}
+                onSelectDocument={(doc) => setSelectedDocument(doc)}
               />
             )}
 

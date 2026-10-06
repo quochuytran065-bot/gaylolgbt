@@ -142,6 +142,85 @@ export const INITIAL_NOTEBOOK_ENTRIES: NotebookEntry[] = [
 // ═════════════════════════════════════════════════════════════════════
 export const INITIAL_COURSES: Course[] = [
   {
+    id: 'course-empire-dgnl-vact',
+    title: 'Luyện Thi Đánh Giá Năng Lực V-ACT (ĐHQG TP.HCM) – Hệ Thống Empire Hub',
+    description: 'Trọn bộ giải chi tiết đề thi thử chuẩn ma trận V-ACT: Ngôn ngữ Tiếng Việt, Tiếng Anh, Toán logic, Phân tích số liệu và giải quyết vấn đề Khoa học tự nhiên & xã hội theo tài liệu luyện thi Empire.',
+    instructor: 'Đội Ngũ Giảng Viên Empire ĐGNL',
+    instructorTitle: 'Hệ Thống Luyện Thi Đánh Giá Năng Lực Empire Team',
+    subject: 'Toán học',
+    grade: 'Đại học',
+    thumbnail: 'https://voh.empire.edu.vn/bucket-empireehanoi/media/20260927/courses/01a0e150c1907341b7e1744c639d781c/kh_a_thi_th___gnl_01_1790486561286813736812.png',
+    totalDuration: '32 giờ',
+    totalLessons: 12,
+    rating: 5.0,
+    enrolledCount: 34500,
+    badge: 'ĐGNL V-ACT 900+',
+    chapters: [
+      {
+        id: 'chap-emp-dgnl-1',
+        title: 'Chuyên Đề: Giải Chi Tiết Đề Rèn Luyện Chuẩn Cấu Trúc ĐGNL Số 1 & 2',
+        lessons: [
+          {
+            id: 'les-emp-vact-1a',
+            title: 'Chữa Đề Chuẩn Cấu Trúc Số 1 – Phần Toán Học P1',
+            durationMinutes: 52,
+            videoUrl: 'https://www.youtube.com/embed/W_8aEs16RI0',
+            youtubeWatchUrl: 'https://www.youtube.com/watch?v=W_8aEs16RI0',
+            summary: 'Chi tiết 15 câu toán giải tích, hình học và đại số trong đề rèn luyện số 1.',
+            isCompleted: false
+          },
+          {
+            id: 'les-emp-vact-1b',
+            title: 'Chữa Đề Chuẩn Cấu Trúc Số 1 – Phần Toán Học P2 & Thống Kê',
+            durationMinutes: 48,
+            videoUrl: 'https://www.youtube.com/embed/Km3ZbHFZZMw',
+            youtubeWatchUrl: 'https://www.youtube.com/watch?v=Km3ZbHFZZMw',
+            summary: 'Xử lý câu hỏi xác suất, tổ hợp và bảng số liệu thống kê.',
+            isCompleted: false
+          }
+        ]
+      },
+      {
+        id: 'chap-emp-dgnl-3',
+        title: 'Chuyên Đề: Giải Chi Tiết Đề Chuẩn Cấu Trúc Số 3 (Đầy Đủ Môn)',
+        lessons: [
+          {
+            id: 'les-emp-vact-3-math',
+            title: 'Đề Số 3: Phần Toán Học & Định Lượng',
+            durationMinutes: 55,
+            videoUrl: 'https://www.youtube.com/embed/L0xgeN0XBLQ',
+            summary: 'Tư duy nhanh cho các bài toán hàm số và hình học không gian.',
+            isCompleted: false
+          },
+          {
+            id: 'les-emp-vact-3-logic',
+            title: 'Đề Số 3: Phần Tư Duy Logic & Mệnh Đề',
+            durationMinutes: 45,
+            videoUrl: 'https://www.youtube.com/embed/ZEPvf2TBZ68',
+            summary: 'Kỹ thuật vẽ sơ đồ Venn và bảng chân trị suy luận logic.',
+            isCompleted: false
+          },
+          {
+            id: 'les-emp-vact-3-viet',
+            title: 'Đề Số 3: Phần Sử Dụng Tiếng Việt & Đọc Hiểu',
+            durationMinutes: 42,
+            videoUrl: 'https://www.youtube.com/embed/fJ9rUzIMcZQ',
+            summary: 'Kỹ năng làm 20 câu đọc hiểu và ngữ pháp tiếng Việt.',
+            isCompleted: false
+          },
+          {
+            id: 'les-emp-vact-3-eng',
+            title: 'Đề Số 3: Phần Tiếng Anh ĐGNL',
+            durationMinutes: 40,
+            videoUrl: 'https://www.youtube.com/embed/2e_GqjQp-uU',
+            summary: 'Từ vựng học thuật và mẹo xử lý đoạn văn điền từ.',
+            isCompleted: false
+          }
+        ]
+      }
+    ]
+  },
+  {
     id: 'course-empire-toan-12',
     title: 'Toán 12 Chuyên Sâu – Hệ Thống Luyện Thi Empire & Thầy Nguyễn Quốc Chí',
     description: 'Trọn bộ bài giảng chuyên sâu: Tính đơn điệu, Cực trị hàm số, Đường tiệm cận, Bài toán thực tế và Hình học Oxyz biên soạn theo cấu trúc luyện thi Empire Education. Bám sát chuẩn kỳ thi Tốt nghiệp THPT 2026.',

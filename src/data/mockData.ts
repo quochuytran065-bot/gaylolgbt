@@ -10,6 +10,79 @@ export const HUMANITIES_IMAGE = humanitiesImg;
 
 export const INITIAL_DOCUMENTS: DocumentItem[] = [
   {
+    id: 'doc-dgnl-vact-de2',
+    title: 'ĐỀ THI THỬ CHUẨN CẤU TRÚC ĐGNL V-ACT SỐ 2 (ĐHQG TP.HCM)',
+    description: 'Trọn bộ đề thi thử ĐGNL 120 câu chuẩn cấu trúc 3 phần: Sử dụng ngôn ngữ (Tiếng Việt & Tiếng Anh), Toán học - Tư duy logic - Phân tích số liệu, và Giải quyết vấn đề (Lý, Hóa, Sinh, Sử, Địa).',
+    subject: 'Toán học',
+    grade: 'Đại học',
+    fileType: 'pdf',
+    fileSize: '4.8 MB',
+    pageCount: 16,
+    author: 'Hệ Thống Luyện Thi Empire',
+    views: 31200,
+    downloads: 8940,
+    publishedDate: '28/06/2026',
+    readTimeMinutes: 60,
+    coverImage: STEM_IMAGE,
+    downloadUrl: 'https://voh.empire.edu.vn/bucket-empireehanoi/resource/20260628/resources/document/___t__luy_n_v_act_s__2_1782640977321798975976.pdf',
+    directContent: {
+      summary: 'Đề rèn luyện thực chiến đánh giá năng lực V-ACT bám sát cấu trúc của Đại học Quốc gia TP.HCM.',
+      sections: [
+        {
+          title: 'Phần 1: Sử dụng ngôn ngữ (40 câu)',
+          content: '20 câu Tiếng Việt kiểm tra từ ngữ, ngữ pháp, biện pháp tu từ và phân tích văn bản. 20 câu Tiếng Anh kiểm tra cấu trúc câu, từ vựng và bài đọc hiểu.',
+          formulasOrNotes: ['Chiến thuật: Làm trong 30-35 phút để dành thời gian cho phần logic.']
+        },
+        {
+          title: 'Phần 2: Toán học, Tư duy logic, Phân tích số liệu (30 câu)',
+          content: '10 câu toán phổ thông, 10 câu suy luận logic mệnh đề và thứ tự, 10 câu phân tích biểu đồ và bảng số liệu thống kê.',
+          formulasOrNotes: ['Mẹo: Sử dụng sơ đồ Venn và lập bảng chân trị cho bài toán logic.']
+        },
+        {
+          title: 'Phần 3: Giải quyết vấn đề (50 câu)',
+          content: 'Các câu hỏi khoa học tự nhiên (Vật lý, Hóa học, Sinh học) và khoa học xã hội (Lịch sử, Địa lý) ứng dụng thực tế.',
+          formulasOrNotes: ['Tập trung phân tích thông tin được cung cấp trong đề bài thay vì học thuộc lòng.']
+        }
+      ],
+      importantTakeaways: [
+        'Phân bổ thời gian: 150 phút cho 120 câu (trung bình 1.25 phút/câu).',
+        'Không để trống bất kỳ câu trả lời nào vì bài thi không trừ điểm câu sai.',
+        'Đọc kỹ các bảng số liệu trước khi tính toán số liệu.'
+      ]
+    }
+  },
+  {
+    id: 'doc-dgnl-vact-de3',
+    title: 'ĐỀ THI THỬ CHUẨN CẤU TRÚC ĐGNL V-ACT SỐ 3 (KÈM ĐÁP ÁN CHI TIẾT)',
+    description: 'Đề thi rèn luyện số 3 kèm giải thích chi tiết từng câu hỏi biên soạn bởi đội ngũ Empire Team, giúp nâng cao tốc độ giải đề và khả năng tư duy phân loại cao.',
+    subject: 'Toán học',
+    grade: 'Đại học',
+    fileType: 'pdf',
+    fileSize: '5.1 MB',
+    pageCount: 22,
+    author: 'Hệ Thống Luyện Thi Empire',
+    views: 28400,
+    downloads: 7810,
+    publishedDate: '28/06/2026',
+    readTimeMinutes: 50,
+    coverImage: STEM_IMAGE,
+    downloadUrl: 'https://voh.empire.edu.vn/bucket-empireehanoi/resource/20260628/resources/document/___t__luy_n_v_act_s__3_1782640988298852664854.pdf',
+    directContent: {
+      summary: 'Đề thi thử số 3 kèm lời giải chi tiết cho tất cả các phần thi năng lực V-ACT.',
+      sections: [
+        {
+          title: 'Hướng dẫn giải Phần Logic & Biểu đồ',
+          content: 'Phân tích kỹ lưỡng các dạng câu hỏi logic giả định, bài toán xếp chỗ và biểu đồ phân bổ dân số/kinh tế.',
+          formulasOrNotes: ['Dùng phương pháp loại suy nhanh để tiết kiệm 50% thời gian.']
+        }
+      ],
+      importantTakeaways: [
+        'Ôn luyện thường xuyên để rèn phản xạ tư duy nhanh.',
+        'Luyện tập kỹ năng vẽ sơ đồ tư duy cho bài toán thứ tự logic.'
+      ]
+    }
+  },
+  {
     id: 'doc-toan-12-01',
     title: 'Sổ Tay Công Thức Giải Tích 12 & Hình Học Không Gian Ôn Thi Tốt Nghiệp',
     description: 'Hệ thống hóa toàn bộ công thức đạo hàm, khảo sát hàm số, tích phân, số phức và phương pháp tọa độ Oxyz trong không gian.',

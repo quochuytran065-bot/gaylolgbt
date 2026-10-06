@@ -20,12 +20,14 @@ import {
   Sparkles,
   BookMarked,
   Headphones,
-  MessageSquare
+  MessageSquare,
+  GraduationCap
 } from 'lucide-react';
 
 export type AppTab = 
   | 'home' 
   | 'exams' 
+  | 'dgnl'
   | 'courses' 
   | 'arena' 
   | 'notebook' 
@@ -109,6 +111,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <FileCheck2 className="w-3.5 h-3.5" />
               <span>Đề thi</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('dgnl')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer relative ${
+                activeTab === 'dgnl'
+                  ? isDarkMode ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-indigo-700 shadow-xs'
+                  : isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-700/60' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-amber-500" />
+              <span>Luyện Thi ĐGNL</span>
+              <span className="px-1 py-0.2 rounded bg-amber-500 text-slate-900 font-extrabold text-[9px] uppercase tracking-tighter">
+                HOT
+              </span>
             </button>
 
             <button
@@ -500,6 +517,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             📝 Đề thi & Thi thử (Mock Test)
+          </button>
+          <button
+            onClick={() => { setActiveTab('dgnl'); setIsMobileMenuOpen(false); }}
+            className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-xl ${
+              activeTab === 'dgnl' ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold' : 'text-slate-700 dark:text-slate-300'
+            }`}
+          >
+            <span>🎯 Luyện Thi ĐGNL (Empire Hub)</span>
+            <span className="px-1.5 py-0.5 rounded bg-amber-500 text-slate-900 font-black text-[10px]">HOT</span>
           </button>
           <button
             onClick={() => { setActiveTab('courses'); setIsMobileMenuOpen(false); }}
