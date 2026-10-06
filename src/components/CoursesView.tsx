@@ -62,7 +62,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
 
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<CourseLesson | null>(null);
-  const [subjectFilter, setSubjectFilter] = useState<string>('Táº¥t cáº£ mĂ´n');
+  const [subjectFilter, setSubjectFilter] = useState<string>('Tất cả môn');
   const [search, setSearch] = useState('');
   const [isCalcOpen, setIsCalcOpen] = useState(false);
   const [lessonTab, setLessonTab] = useState<'video' | 'cheatsheet'>('video');
@@ -86,7 +86,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
       localStorage.removeItem('eduviet_courses');
     } catch { /* noop */ }
     setCourses(INITIAL_COURSES);
-    alert('ÄĂ£ cáº­p nháº­t toĂ n bá»™ khoĂ¡ há»c, video bĂ i giáº£ng vĂ  máº¹o báº¥m mĂ¡y má»›i nháº¥t!');
+    alert('Đã cập nhật toàn bộ khóa học, video bài giảng và mẹo bấm máy mới nhất!');
   };
 
   // Toggle lesson completion
@@ -140,9 +140,9 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
   // Filtered courses
   const filteredCourses = courses.filter(c => {
     let matchSubject = true;
-    if (subjectFilter === 'Máº¹o thi & Casio') {
+    if (subjectFilter === 'Mẹo thi & Casio') {
       matchSubject = c.id.includes('meo') || c.id.includes('casio');
-    } else if (subjectFilter !== 'Táº¥t cáº£ mĂ´n') {
+    } else if (subjectFilter !== 'Tất cả môn') {
       matchSubject = c.subject === subjectFilter;
     }
 
@@ -193,15 +193,15 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
         <div className="relative z-10 space-y-3">
           <div className="flex items-center gap-2 text-xs font-semibold text-purple-300 uppercase tracking-wider">
             <GraduationCap className="w-4 h-4 text-purple-400" />
-            <span>Há»† THá»NG QUáº¢N LĂ Há»ŒC Táº¬P (LMS) & VIDEO BĂ€I GIáº¢NG CHUYĂN SĂ‚U</span>
+            <span>HỆ THỐNG QUẢN LÝ HỌC TẬP (LMS) & VIDEO BÀI GIẢNG CHUYÊN SÂU</span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading">
-            KhĂ³a Há»c Trá»±c Tuyáº¿n & Tuyá»‡t Ká»¹ Báº¥m MĂ¡y Casio THPT
+            Khóa Học Trực Tuyến & Tuyệt Kỹ Bấm Máy Casio THPT
           </h1>
 
           <p className="text-sm text-purple-200/90 max-w-2xl leading-relaxed">
-            Há»‡ thá»‘ng video bĂ i giáº£ng chuáº©n cáº¥u trĂºc Bá»™ GD&ÄT 2025/2026, bĂ­ quyáº¿t phĂ¢n bá»• thá»i gian, máº¹o loáº¡i trá»« Ä‘Ă¡p Ă¡n báº«y vĂ  trá»n bá»™ ká»¹ thuáº­t báº¥m mĂ¡y Casio FX-580VN X cho táº¥t cáº£ cĂ¡c mĂ´n thi.
+            Hệ thống video bài giảng chuẩn cấu trúc Bộ GD&ĐT 2025/2026, bí quyết phân bổ thời gian, mẹo loại trừ đáp án bẫy và trọn bộ kỹ thuật bấm máy Casio FX-580VN X cho tất cả các môn thi.
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -210,18 +210,18 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
               className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/20 text-cyan-200 border border-cyan-400/40 text-xs font-semibold hover:bg-cyan-500/30 transition-colors cursor-pointer"
             >
               <Calculator className="w-3.5 h-3.5 text-cyan-300" />
-              <span>Báº­t MĂ¡y TĂ­nh Casio fx-580VN X áº¢o</span>
+              <span>Bật Máy Tính Casio fx-580VN X Ảo</span>
             </button>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white/90 text-xs backdrop-blur-xs">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Video bĂ i giáº£ng kĂ¨m giĂ¡o trĂ¬nh tĂ³m táº¯t
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Video bài giảng kèm giáo trình tóm tắt
             </span>
             <button
               onClick={handleRefreshCourses}
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/30 hover:bg-purple-500/50 text-purple-200 border border-purple-400/40 text-xs transition-colors cursor-pointer ml-auto"
-              title="Äá»“ng bá»™ cáº­p nháº­t bĂ i giáº£ng má»›i nháº¥t"
+              title="Đồng bộ cập nhật bài giảng mới nhất"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>LĂ m Má»›i BĂ i Giáº£ng</span>
+              <span>Làm Mới Bài Giảng</span>
             </button>
           </div>
         </div>
@@ -231,7 +231,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
         </div>
       </div>
 
-      {/* â”€â”€ Modal Chi tiáº¿t khĂ³a há»c & Xem bĂ i giáº£ng Video â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Modal Chi tiết khóa học & Xem bài giảng Video ────────── */}
       {selectedCourse && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
           <div className="relative w-full max-w-5xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh]">
@@ -277,7 +277,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                         }`}
                       >
                         <Play className="w-3.5 h-3.5 fill-current" />
-                        <span>Video BĂ i Giáº£ng</span>
+                        <span>Video Bài Giảng</span>
                       </button>
                       <button
                         onClick={() => setLessonTab('cheatsheet')}
@@ -288,7 +288,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                         }`}
                       >
                         <Lightbulb className="w-3.5 h-3.5 text-amber-300" />
-                        <span>Máº¹o & GiĂ¡o TrĂ¬nh TĂ³m Táº¯t</span>
+                        <span>Mẹo & Giáo Trình Tóm Tắt</span>
                       </button>
                     </div>
 
@@ -298,7 +298,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
-                        title="Má»Ÿ video trá»±c tiáº¿p trĂªn YouTube Ä‘á»ƒ xem khĂ´ng bá»‹ giá»›i háº¡n"
+                        title="Mở video trực tiếp trên YouTube để xem không bị giới hạn"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                         <span>Má»Ÿ TrĂªn YouTube</span>
@@ -306,10 +306,10 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                       <button
                         onClick={() => setBackupStream(b => !b)}
                         className="px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer"
-                        title="Äá»•i nguá»“n phĂ¡t"
+                        title="Đổi nguồn phát"
                       >
                         <RotateCcw className="w-3.5 h-3.5 inline mr-1" />
-                        <span>{backupStream ? 'Nguá»“n 2' : 'Nguá»“n 1'}</span>
+                        <span>{backupStream ? 'Nguồn 2' : 'Nguồn 1'}</span>
                       </button>
                     </div>
                   </div>
@@ -341,7 +341,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                       <div className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-900 dark:text-amber-200">
                         <div className="flex items-center gap-2">
                           <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                          <span>Náº¿u video khĂ´ng hiá»ƒn thá»‹ do giá»›i háº¡n cá»§a YouTube hoáº·c máº¡ng trÆ°á»ng há»c, báº¡n cĂ³ thá»ƒ báº¥m <strong>"Má»Ÿ TrĂªn YouTube"</strong> hoáº·c chuyá»ƒn sang tab <strong>"Máº¹o & GiĂ¡o TrĂ¬nh TĂ³m Táº¯t"</strong>.</span>
+                          <span>Nếu video không hiển thị do giới hạn của YouTube hoặc mạng trường học, bạn có thể bấm <strong>"Mở Trên YouTube"</strong> hoặc chuyển sang tab <strong>"Mẹo & Giáo Trình Tóm Tắt"</strong>.</span>
                         </div>
                         <a
                           href={getWatchUrl(selectedLesson)}
@@ -349,7 +349,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                           rel="noopener noreferrer"
                           className="shrink-0 font-bold underline ml-2 hover:text-amber-700"
                         >
-                          Xem YouTube â†—
+                          Xem YouTube ↗
                         </a>
                       </div>
                     </div>
@@ -357,7 +357,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                     /* Cheatsheet and Key Sequence Viewer */
                     <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50/40 dark:from-slate-800/80 dark:to-indigo-950/30 border border-indigo-200/80 dark:border-indigo-900/60 space-y-4">
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">TĂ³m táº¯t chuyĂªn Ä‘á»</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Tóm tắt chuyên đề</span>
                         <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">{selectedLesson.title}</h3>
                         <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{selectedLesson.summary}</p>
                       </div>
@@ -368,13 +368,13 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                           <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                             <span className="flex items-center gap-1.5">
                               <Calculator className="w-3.5 h-3.5 text-cyan-400" />
-                              Tá»• há»£p phĂ­m Casio fx-580VN X:
+                              Tổ hợp phím Casio fx-580VN X:
                             </span>
                             <button
                               onClick={() => setIsCalcOpen(true)}
                               className="px-2 py-0.5 rounded bg-cyan-700/60 hover:bg-cyan-600 text-white text-[10px] font-bold cursor-pointer transition-colors"
                             >
-                              Thá»­ báº¥m ngay
+                              Thử bấm ngay
                             </button>
                           </div>
                           <div className="text-sm sm:text-base font-mono font-bold tracking-wide text-cyan-200 break-words">
@@ -388,7 +388,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                         <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2">
                           <Lightbulb className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                           <div>
-                            <strong>CĂ´ng thá»©c / Máº¹o cá»‘t lĂµi:</strong> {selectedLesson.formulaTips}
+                            <strong>Công thức / Mẹo cốt lõi:</strong> {selectedLesson.formulaTips}
                           </div>
                         </div>
                       )}
@@ -398,7 +398,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                         <div className="space-y-2">
                           <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                             <FileText className="w-3.5 h-3.5 text-indigo-500" />
-                            CĂ¡c bÆ°á»›c thá»±c hĂ nh thá»±c chiáº¿n:
+                            Các bước thực hành thực chiến:
                           </h5>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {selectedLesson.keySteps.map((step, sIdx) => (
@@ -422,11 +422,11 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                 <div className="space-y-1 w-full sm:w-auto">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-indigo-900 dark:text-indigo-200">
-                      Tiáº¿n Ä‘á»™ hoĂ n thĂ nh: {getCourseProgress(selectedCourse)}%
+                      Tiến độ hoàn thành: {getCourseProgress(selectedCourse)}%
                     </span>
                     {getCourseProgress(selectedCourse) === 100 && (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                        ÄĂ£ Ä‘á»§ Ä‘iá»u kiá»‡n cáº¥p chá»©ng chá»‰!
+                        Đã đủ điều kiện cấp chứng chỉ!
                       </span>
                     )}
                   </div>
@@ -444,11 +444,11 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer shrink-0 animate-bounce"
                   >
                     <Award className="w-4 h-4" />
-                    <span>Nháº­n Chá»©ng Chá»‰ Ngay</span>
+                    <span>Nhận Chứng Chỉ Ngay</span>
                   </button>
                 ) : (
                   <span className="text-xs text-slate-500 dark:text-slate-400 italic">
-                    (HoĂ n thĂ nh 100% bĂ i há»c Ä‘á»ƒ má»Ÿ khĂ³a chá»©ng chá»‰ sá»‘)
+                    (Hoàn thành 100% bài học để mở khóa chứng chỉ số)
                   </span>
                 )}
               </div>
@@ -457,7 +457,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
               <div className="space-y-4">
                 <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
                   <BookOpen className="w-4 h-4 text-indigo-600" />
-                  Danh SĂ¡ch ChÆ°Æ¡ng & BĂ i Giáº£ng ({selectedCourse.chapters.reduce((acc, c) => acc + c.lessons.length, 0)} bĂ i)
+                  Danh Sách Chương & Bài Giảng ({selectedCourse.chapters.reduce((acc, c) => acc + c.lessons.length, 0)} bài)
                 </h4>
 
                 <div className="space-y-3">
@@ -465,7 +465,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                     <div key={chap.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50/50 dark:bg-slate-800/40">
                       <div className="px-4 py-3 bg-slate-100/60 dark:bg-slate-800/80 font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center justify-between">
                         <span>{chap.title}</span>
-                        <span className="text-[11px] font-normal text-slate-500">{chap.lessons.length} bĂ i</span>
+                        <span className="text-[11px] font-normal text-slate-500">{chap.lessons.length} bài</span>
                       </div>
 
                       <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -490,7 +490,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                                     e.stopPropagation();
                                     handleToggleLesson(selectedCourse.id, les.id);
                                   }}
-                                  title={les.isCompleted ? 'ÄĂ¡nh dáº¥u chÆ°a há»c' : 'ÄĂ¡nh dáº¥u Ä‘Ă£ há»c xong'}
+                                  title={les.isCompleted ? 'Đánh dấu chưa học' : 'Đánh dấu đã học xong'}
                                   className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
                                     les.isCompleted
                                       ? 'bg-emerald-500 text-white'
@@ -505,7 +505,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                                   </h5>
                                   <div className="flex flex-wrap items-center gap-2 mt-1">
                                     <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                                      <Clock className="w-3 h-3" /> {les.durationMinutes} phĂºt
+                                      <Clock className="w-3 h-3" /> {les.durationMinutes} phút
                                     </span>
                                     {les.casioKeys && (
                                       <span className="px-1.5 py-0.2 rounded bg-cyan-100 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-300 text-[10px] font-mono font-bold">
@@ -522,7 +522,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                                     ? 'bg-indigo-600 text-white'
                                     : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
                                 }`}>
-                                  {isCurrent ? 'Äang há»c' : 'VĂ o bĂ i'}
+                                  {isCurrent ? 'Đang học' : 'Vào bài'}
                                 </span>
                               </div>
                             </div>
@@ -540,7 +540,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
         </div>
       )}
 
-      {/* â”€â”€ Modal Chá»©ng Chá»‰ HoĂ n ThĂ nh KhĂ³a Há»c (Certificate) â”€â”€â”€â”€â”€ */}
+      {/* ── Modal Chứng Chỉ Hoàn Thành Khóa Học (Certificate) ───── */}
       {activeCertificate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in">
           <div className="relative w-full max-w-2xl bg-gradient-to-b from-amber-50 to-white text-slate-900 rounded-3xl p-8 shadow-2xl border-4 border-amber-300 space-y-6 text-center">
@@ -549,7 +549,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
               onClick={() => setActiveCertificate(null)}
               className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 cursor-pointer"
             >
-              âœ•
+              ✕
             </button>
 
             {/* Certificate Header */}
@@ -557,20 +557,20 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
               <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 flex items-center justify-center shadow-md">
                 <Award className="w-8 h-8 text-amber-900" />
               </div>
-              <span className="text-xs uppercase tracking-widest text-amber-800 font-extrabold">Há»† THá»NG GIĂO Dá»¤C TRá»°C TUYáº¾N EDUVIET</span>
+              <span className="text-xs uppercase tracking-widest text-amber-800 font-extrabold">HỆ THỐNG GIÁO DỤC TRỰC TUYẾN EDUVIET</span>
               <h2 className="text-2xl font-black text-slate-900 font-serif tracking-wide uppercase pt-1">
-                CHá»¨NG CHá»ˆ HOĂ€N THĂ€NH KHĂ“A Há»ŒC
+                CHỨNG CHỈ HOÀN THÀNH KHÓA HỌC
               </h2>
               <p className="text-xs text-slate-600 italic">Certificate of Course Completion</p>
             </div>
 
             {/* Certificate Body */}
             <div className="space-y-3 py-2">
-              <p className="text-xs text-slate-600">Chá»©ng nháº­n há»c viĂªn:</p>
+              <p className="text-xs text-slate-600">Chứng nhận học viên:</p>
               <h3 className="text-2xl font-black text-indigo-950 font-serif tracking-normal">
                 {activeCertificate.userName}
               </h3>
-              <p className="text-xs text-slate-600">ÄĂ£ hoĂ n thĂ nh xuáº¥t sáº¯c toĂ n bá»™ bĂ i giáº£ng vĂ  bĂ i kiá»ƒm tra Ä‘Ă¡nh giĂ¡ nÄƒng lá»±c khĂ³a há»c:</p>
+              <p className="text-xs text-slate-600">Đã hoàn thành xuất sắc toàn bộ bài giảng và bài kiểm tra đánh giá năng lực khóa học:</p>
               <h4 className="text-lg font-bold text-amber-900 max-w-lg mx-auto font-heading">
                 {activeCertificate.courseTitle}
               </h4>
@@ -579,15 +579,15 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
             {/* Certificate Stamp & Details */}
             <div className="flex items-center justify-between border-t-2 border-amber-200 pt-4 text-xs text-slate-600 px-6">
               <div className="text-left space-y-1">
-                <p>MĂ£ chá»©ng chá»‰: <strong>{activeCertificate.certificateCode}</strong></p>
-                <p>NgĂ y cáº¥p: <strong>{activeCertificate.issueDate}</strong></p>
+                <p>Mã chứng chỉ: <strong>{activeCertificate.certificateCode}</strong></p>
+                <p>Ngày cấp: <strong>{activeCertificate.issueDate}</strong></p>
               </div>
 
               <div className="text-right space-y-1">
                 <span className="inline-block px-3 py-1 bg-red-100 text-red-800 border-2 border-red-500 rounded-full font-bold text-[10px] uppercase tracking-wider rotate-[-5deg]">
                   âœ“ EDUVIET CERTIFIED
                 </span>
-                <p className="text-[11px] font-bold text-slate-800">Ban ChuyĂªn MĂ´n Kháº£o ThĂ­</p>
+                <p className="text-[11px] font-bold text-slate-800">Ban Chuyên Môn Khảo Thí</p>
               </div>
             </div>
 
@@ -598,17 +598,17 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                 className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md cursor-pointer transition-all"
               >
                 <Download className="w-4 h-4" />
-                <span>In / Táº£i PDF Chá»©ng Chá»‰</span>
+                <span>In / Tải PDF Chứng Chỉ</span>
               </button>
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
-                  alert('ÄĂ£ sao chĂ©p liĂªn káº¿t chá»©ng chá»‰!');
+                  alert('Đã sao chép liên kết chứng chỉ!');
                 }}
                 className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs cursor-pointer transition-all"
               >
                 <Share2 className="w-4 h-4" />
-                <span>Chia sáº»</span>
+                <span>Chia sẻ</span>
               </button>
             </div>
 
@@ -616,21 +616,21 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
         </div>
       )}
 
-      {/* â”€â”€ Filters & Search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Filters & Search ──────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
           <span className="text-slate-400 dark:text-slate-500 font-medium shrink-0 flex items-center gap-1">
-            <Filter className="w-3.5 h-3.5 text-purple-600" /> Chá»§ Ä‘á»:
+            <Filter className="w-3.5 h-3.5 text-purple-600" /> Chủ đề:
           </span>
           {[
-            'Táº¥t cáº£ mĂ´n',
-            'Máº¹o thi & Casio',
-            'ToĂ¡n há»c',
-            'Váº­t lĂ½',
-            'HĂ³a há»c',
-            'Sinh há»c',
-            'Tiáº¿ng Anh',
-            'Lá»‹ch sá»­'
+            'Tất cả môn',
+            'Mẹo thi & Casio',
+            'Toán học',
+            'Vật lý',
+            'Hóa học',
+            'Sinh học',
+            'Tiếng Anh',
+            'Lịch sử'
           ].map(s => (
             <button
               key={s}
@@ -652,13 +652,13 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="TĂ¬m khĂ³a há»c, máº¹o lĂ m bĂ i, Casio..."
+            placeholder="Tìm khóa học, mẹo làm bài, Casio..."
             className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
           />
         </div>
       </div>
 
-      {/* â”€â”€ Course Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Course Grid ────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredCourses.map(course => {
           const progress = getCourseProgress(course);
@@ -696,7 +696,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                       <Star className="w-3.5 h-3.5 fill-current" /> {course.rating}
                     </span>
                     <span className="flex items-center gap-1 text-slate-300">
-                      <Users className="w-3.5 h-3.5" /> {(course.enrolledCount / 1000).toFixed(1)}k há»c viĂªn
+                      <Users className="w-3.5 h-3.5" /> {(course.enrolledCount / 1000).toFixed(1)}k học viên
                     </span>
                   </div>
                 </div>
@@ -725,7 +725,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                   {/* Progress Bar */}
                   <div className="space-y-1.5 pt-2">
                     <div className="flex items-center justify-between text-[11px] text-slate-500">
-                      <span>Tiáº¿n Ä‘á»™ há»c táº­p</span>
+                      <span>Tiến độ học tập</span>
                       <span className="font-bold text-indigo-600 dark:text-indigo-400">{progress}%</span>
                     </div>
                     <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -749,7 +749,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'Há
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm hover:shadow-purple-500/25 active:scale-98 transition-all cursor-pointer"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>VĂ o Há»c Video & Máº¹o BĂ i Giáº£ng</span>
+                  <span>Vào Học Video & Mẹo Bài Giảng</span>
                   <ChevronRight className="w-3.5 h-3.5 ml-auto" />
                 </button>
               </div>

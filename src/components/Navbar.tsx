@@ -12,7 +12,15 @@ import {
   Flame,
   ShieldCheck,
   Sun,
-  Moon
+  Moon,
+  Home,
+  FileCheck2,
+  PlayCircle,
+  Swords,
+  Sparkles,
+  BookMarked,
+  Headphones,
+  MessageSquare
 } from 'lucide-react';
 
 export type AppTab = 
@@ -47,6 +55,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { currentUser, isAdmin, logout, openAuthModal, loginAsDemo } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUtilityMenuOpen, setIsUtilityMenuOpen] = useState(false);
+
+  const isUtilityActive = ['notebook', 'focus', 'community', 'analytics'].includes(activeTab);
 
   return (
     <header className={`sticky top-0 z-40 border-b transition-colors duration-300 ev-glass ${
@@ -74,115 +85,166 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </button>
 
-          <nav className="hidden lg:flex items-center gap-0.5">
+          {/* Main Desktop Navigation - Compact & Modern */}
+          <nav className="hidden lg:flex items-center gap-1 bg-slate-100/80 dark:bg-slate-800/70 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-md shadow-2xs">
             <button
               onClick={() => setActiveTab('home')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'home'
-                  ? isDarkMode ? 'bg-sky-900/50 text-sky-300 font-bold' : 'bg-sky-50 text-sky-700 font-bold'
-                  : isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? isDarkMode ? 'bg-sky-600 text-white shadow-xs' : 'bg-white text-sky-700 shadow-xs'
+                  : isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-700/60' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
-              Trang chủ
+              <Home className="w-3.5 h-3.5" />
+              <span>Trang chủ</span>
             </button>
 
             <button
               onClick={() => setActiveTab('exams')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'exams'
-                  ? isDarkMode ? 'bg-sky-900/50 text-sky-300 font-bold' : 'bg-sky-50 text-sky-700 font-bold'
-                  : isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? isDarkMode ? 'bg-sky-600 text-white shadow-xs' : 'bg-white text-sky-700 shadow-xs'
+                  : isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-700/60' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
-              Đề thi & Thi thử
+              <FileCheck2 className="w-3.5 h-3.5" />
+              <span>Đề thi</span>
             </button>
 
             <button
               onClick={() => setActiveTab('courses')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'courses'
-                  ? isDarkMode ? 'bg-purple-900/50 text-purple-300 font-bold' : 'bg-purple-50 text-purple-700 font-bold'
-                  : isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? isDarkMode ? 'bg-purple-600 text-white shadow-xs' : 'bg-white text-purple-700 shadow-xs'
+                  : isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-700/60' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
+              <PlayCircle className="w-3.5 h-3.5 text-purple-500" />
               <span>Khóa học</span>
-              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500 text-white">Video</span>
             </button>
 
             <button
               onClick={() => setActiveTab('arena')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'arena'
-                  ? isDarkMode ? 'bg-rose-900/50 text-rose-300 font-bold' : 'bg-rose-50 text-rose-700 font-bold'
-                  : isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? isDarkMode ? 'bg-rose-600 text-white shadow-xs' : 'bg-white text-rose-700 shadow-xs'
+                  : isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-700/60' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
+              <Swords className="w-3.5 h-3.5 text-rose-500" />
               <span>Đấu trường</span>
-              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-rose-500 text-white">1v1</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('notebook')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1 ${
-                activeTab === 'notebook'
-                  ? isDarkMode ? 'bg-amber-900/50 text-amber-300 font-bold' : 'bg-amber-50 text-amber-700 font-bold'
-                  : isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <span>Sổ tay</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('focus')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1 ${
-                activeTab === 'focus'
-                  ? isDarkMode ? 'bg-teal-900/50 text-teal-300 font-bold' : 'bg-teal-50 text-teal-700 font-bold'
-                  : isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <span>Phòng học</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('community')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1 ${
-                activeTab === 'community'
-                  ? isDarkMode ? 'bg-sky-900/50 text-sky-300 font-bold' : 'bg-sky-50 text-sky-700 font-bold'
-                  : isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <span>Hỏi đáp</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
             </button>
 
             <button
               onClick={() => setActiveTab('documents')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'documents'
-                  ? isDarkMode ? 'bg-sky-900/50 text-sky-300 font-bold' : 'bg-sky-50 text-sky-700 font-bold'
-                  : isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? isDarkMode ? 'bg-sky-600 text-white shadow-xs' : 'bg-white text-sky-700 shadow-xs'
+                  : isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-700/60' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
-              Tài liệu
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Tài liệu</span>
             </button>
 
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1 ${
-                activeTab === 'analytics'
-                  ? isDarkMode ? 'bg-sky-900/50 text-sky-300 font-bold ring-1 ring-sky-700/60' : 'bg-sky-50 text-sky-700 font-bold ring-1 ring-sky-200/80'
-                  : isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <Target className={`w-3.5 h-3.5 ${activeTab === 'analytics' ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400'}`} />
-              <span>Mục tiêu</span>
-              <span className={`px-1.5 py-0.2 text-[9px] font-bold rounded-full ${
-                activeTab === 'analytics' 
-                  ? 'bg-amber-500 text-white shadow-2xs' 
-                  : isDarkMode ? 'bg-amber-950/80 text-amber-300' : 'bg-amber-100 text-amber-900'
-              }`}>
-                Aim
-              </span>
-            </button>
+            {/* Dropdown Tiện ích học tập (Sổ tay, Phòng học, Hỏi đáp, Aim) */}
+            <div className="relative">
+              <button
+                onClick={() => setIsUtilityMenuOpen(v => !v)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  isUtilityActive
+                    ? isDarkMode ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-indigo-700 shadow-xs'
+                    : isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-700/60' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span>
+                  {activeTab === 'notebook' ? 'Sổ tay' :
+                   activeTab === 'focus' ? 'Phòng học' :
+                   activeTab === 'community' ? 'Hỏi đáp' :
+                   activeTab === 'analytics' ? 'Mục tiêu Aim' : 'Tiện ích'}
+                </span>
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isUtilityMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isUtilityMenuOpen && (
+                <div 
+                  className={`absolute right-0 mt-2 w-60 rounded-2xl shadow-xl border p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 backdrop-blur-md ${
+                    isDarkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-200'
+                  }`}
+                  onMouseLeave={() => setIsUtilityMenuOpen(false)}
+                >
+                  <button
+                    onClick={() => { setActiveTab('notebook'); setIsUtilityMenuOpen(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors text-left cursor-pointer ${
+                      activeTab === 'notebook'
+                        ? isDarkMode ? 'bg-amber-950/70 text-amber-300 font-bold' : 'bg-amber-50 text-amber-800 font-bold'
+                        : isDarkMode ? 'text-slate-300 hover:bg-slate-700/60' : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                      <BookMarked className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold leading-tight">Sổ tay ghi nhớ</p>
+                      <p className="text-[10px] text-slate-400">Flashcards & công thức</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('focus'); setIsUtilityMenuOpen(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors text-left cursor-pointer ${
+                      activeTab === 'focus'
+                        ? isDarkMode ? 'bg-teal-950/70 text-teal-300 font-bold' : 'bg-teal-50 text-teal-800 font-bold'
+                        : isDarkMode ? 'text-slate-300 hover:bg-slate-700/60' : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="w-6 h-6 rounded-lg bg-teal-500/10 text-teal-500 flex items-center justify-center shrink-0">
+                      <Headphones className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold leading-tight">Phòng tự học</p>
+                      <p className="text-[10px] text-slate-400">Pomodoro & lofi chill</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('community'); setIsUtilityMenuOpen(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors text-left cursor-pointer ${
+                      activeTab === 'community'
+                        ? isDarkMode ? 'bg-sky-950/70 text-sky-300 font-bold' : 'bg-sky-50 text-sky-800 font-bold'
+                        : isDarkMode ? 'text-slate-300 hover:bg-slate-700/60' : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="w-6 h-6 rounded-lg bg-sky-500/10 text-sky-500 flex items-center justify-center shrink-0">
+                      <MessageSquare className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold leading-tight">Hỏi đáp 24/7</p>
+                      <p className="text-[10px] text-slate-400">AI giải đáp & cộng đồng</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('analytics'); setIsUtilityMenuOpen(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors text-left cursor-pointer ${
+                      activeTab === 'analytics'
+                        ? isDarkMode ? 'bg-indigo-950/70 text-indigo-300 font-bold' : 'bg-indigo-50 text-indigo-800 font-bold'
+                        : isDarkMode ? 'text-slate-300 hover:bg-slate-700/60' : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="w-6 h-6 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0">
+                      <Target className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold leading-tight">Mục tiêu Aim</p>
+                      <p className="text-[10px] text-slate-400">Lộ trình & phân tích điểm</p>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Zone 3: Dark mode toggle + user actions */}
