@@ -33,6 +33,7 @@ interface AuthContextType {
   saveExamResult: (result: ExamResult) => void;
   getResultsForExam: (examId: string) => ExamResult[];
   deleteUser?: (userId: string) => void;
+  toggleUserRole?: (userId: string) => void;
   openAuthModal: () => void;
   closeAuthModal: () => void;
 }
@@ -282,6 +283,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const toggleUserRole = (userId: string) => {
+    if (userId === 'user-admin') {
+      alert('Không thể thay đổi quyền tài khoản Quản trị viên gốc!');
+      return;
+    }
+    const updated = allUsers.map(u => {
+      if (u.id === userId) {
+        const nextRole = u.role === 'admin' ? 'student' : 'admin';
+        return { ...u, role: nextRole as 'student' | 'admin' };
+      }
+      return u;
+    });
+    setAllUsers(updated);
+    try {
+      localStorage.setItem(STORAGE_KEY_ALL_USERS, JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+    if (currentUser?.id === userId) {
+      const updatedSelf = updated.find(u => u.id === userId);
+      if (updatedSelf) setCurrentUser(updatedSelf);
+    }
+  };
+
   const toggleSaveDocument = (docId: string) => {
     if (!currentUser) {
       setIsAuthModalOpen(true);
@@ -331,6 +356,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         saveExamResult,
         getResultsForExam,
         deleteUser,
+        toggleUserRole,
         openAuthModal: () => setIsAuthModalOpen(true),
         closeAuthModal: () => setIsAuthModalOpen(false)
       }}

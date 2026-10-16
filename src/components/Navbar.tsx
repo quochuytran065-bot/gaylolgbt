@@ -35,7 +35,8 @@ export type AppTab =
   | 'community' 
   | 'documents' 
   | 'analytics' 
-  | 'history';
+  | 'history'
+  | 'admin';
 
 interface NavbarProps {
   activeTab: AppTab;
@@ -75,14 +76,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab('home')}
             className="flex items-center gap-2.5 text-left focus:outline-none group cursor-pointer"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-700 text-white flex items-center justify-center font-bold text-sm shadow-md group-hover:shadow-sky-400/30 group-hover:scale-105 transition-all duration-200">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-bold text-sm shadow-md group-hover:shadow-blue-500/30 group-hover:scale-105 transition-all duration-200">
               <BookOpen className="w-4.5 h-4.5" />
             </div>
             <div className="leading-tight">
               <span className={`text-lg font-extrabold tracking-tight font-heading transition-colors ${
                 isDarkMode ? 'text-slate-50' : 'text-slate-900'
               }`}>
-                Edu<span className="text-sky-600">Viet</span>
+                TEST<span className="text-blue-600">360</span>
+              </span>
+              <span className="hidden sm:inline-block ml-1.5 px-1.5 py-0.2 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 text-[10px] font-bold uppercase tracking-tight">
+                Khảo thí LMS
               </span>
             </div>
           </button>
@@ -284,15 +288,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               }
             </button>
 
-            {/* Admin Portal Button - ONLY visible to Admin */}
+            {/* Admin Portal Toggle Button - ONLY visible to Admin */}
             {isAdmin && (
               <button
-                onClick={onOpenAdminPanel}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-700 via-indigo-600 to-sky-700 hover:from-purple-800 hover:to-indigo-800 text-white font-bold text-xs shadow-sm transition-all cursor-pointer border border-purple-400/30"
-                title="Bảng Quản Trị Hệ Thống (Chỉ Quản trị viên mới có quyền truy cập)"
+                onClick={() => {
+                  if (activeTab === 'admin') {
+                    setActiveTab('home');
+                  } else {
+                    setActiveTab('admin');
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer border ${
+                  activeTab === 'admin'
+                    ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 border-amber-400 shadow-amber-500/20'
+                    : 'bg-gradient-to-r from-purple-700 via-indigo-600 to-sky-700 hover:from-purple-800 hover:to-indigo-800 text-white border-purple-400/30'
+                }`}
+                title="Chuyển đổi giữa Cổng Quản Trị và Cổng Thí Sinh"
               >
                 <ShieldCheck className="w-4 h-4 text-amber-300" />
-                <span>👑 Quản Trị Admin</span>
+                <span>{activeTab === 'admin' ? '👥 Cổng Thí Sinh' : '👑 Cổng Quản Trị Admin'}</span>
               </button>
             )}
 
@@ -302,7 +316,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-colors focus:outline-none cursor-pointer ${
                     isAdmin 
-                      ? 'border-purple-300 bg-purple-50/50 hover:bg-purple-100/50 text-slate-800' 
+                      ? isDarkMode
+                        ? 'border-purple-600/70 bg-purple-950/60 hover:bg-purple-900/60 text-purple-200'
+                        : 'border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-900'
                       : isDarkMode
                         ? 'border-slate-600 bg-slate-800 hover:bg-slate-700 text-slate-100'
                         : 'border-slate-200 hover:bg-slate-50 text-slate-800'
@@ -372,12 +388,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <button
                           onClick={() => {
                             setIsUserMenuOpen(false);
-                            onOpenAdminPanel?.();
+                            setActiveTab('admin');
                           }}
-                          className="w-full px-4 py-2 text-left text-xs font-bold text-purple-700 hover:bg-purple-50 flex items-center gap-2 cursor-pointer border-b border-purple-100"
+                          className={`w-full px-4 py-2 text-left text-xs font-bold flex items-center gap-2 cursor-pointer border-b ${
+                            isDarkMode 
+                              ? 'text-purple-300 hover:bg-purple-950/50 border-purple-800/60' 
+                              : 'text-purple-700 hover:bg-purple-50 border-purple-100'
+                          }`}
                         >
-                          <ShieldCheck className="w-4 h-4 text-purple-600" />
-                          <span>Bảng Điều Khiển Admin</span>
+                          <ShieldCheck className="w-4 h-4 text-purple-500" />
+                          <span>Trung Tâm Quản Trị Admin</span>
                         </button>
                       )}
 
@@ -601,30 +621,30 @@ export const Navbar: React.FC<NavbarProps> = ({
             🕒 Lịch sử kết quả thi
           </button>
 
-          <div className="pt-3 border-t border-slate-200 mt-2">
+          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 mt-2">
             {currentUser ? (
               <div className="space-y-2">
                 {isAdmin && (
                   <button
                     onClick={() => {
                       setIsMobileMenuOpen(false);
-                      onOpenAdminPanel?.();
+                      setActiveTab(activeTab === 'admin' ? 'home' : 'admin');
                     }}
                     className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs cursor-pointer"
                   >
                     <ShieldCheck className="w-4 h-4 text-amber-300" />
-                    <span>👑 Bảng Quản Trị Admin</span>
+                    <span>{activeTab === 'admin' ? '👥 Xem Cổng Thí Sinh' : '👑 Cổng Quản Trị Admin'}</span>
                   </button>
                 )}
-                <div className="flex items-center gap-3 px-3 py-2 bg-slate-50 rounded-lg">
+                <div className="flex items-center gap-3 px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700">
                   <div className={`w-8 h-8 rounded-full font-semibold text-xs flex items-center justify-center ${
-                    isAdmin ? 'bg-purple-600 text-white' : 'bg-sky-100 text-sky-800'
+                    isAdmin ? 'bg-purple-600 text-white' : 'bg-sky-100 dark:bg-sky-900/60 text-sky-800 dark:text-sky-300'
                   }`}>
                     {isAdmin ? '👑' : currentUser.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{currentUser.name}</p>
-                    <p className="text-xs text-slate-500 font-mono">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{currentUser.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                       {isAdmin ? '👑 Quản Trị Viên' : currentUser.grade} · @{currentUser.username}
                     </p>
                   </div>

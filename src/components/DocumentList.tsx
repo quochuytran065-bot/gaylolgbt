@@ -114,7 +114,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, onSelectD
   const [selectedSource, setSelectedSource] = useState('Tất cả nguồn');
   const [selectedFileType, setSelectedFileType] = useState<'all' | 'pdf' | 'docx' | 'direct'>('all');
   const [sortBy, setSortBy] = useState<'views' | 'newest'>('views');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(documents.length === 0);
 
   // Auto-sync states
   const [autoSyncedDocs, setAutoSyncedDocs] = useState<DocumentItem[]>([]);
@@ -446,7 +446,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, onSelectD
                     alt={doc.title}
                     referrerPolicy="no-referrer"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/assets/images/hero_digital_learning_1790863793186.jpg';
+                      (e.target as HTMLImageElement).src = HERO_IMAGE;
                     }}
                     className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
                   />

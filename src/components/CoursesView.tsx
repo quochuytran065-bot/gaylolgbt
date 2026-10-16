@@ -75,6 +75,15 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'H�
   // Certificate Modal State
   const [activeCertificate, setActiveCertificate] = useState<CourseCertificate | null>(null);
 
+  // In-app Toast state
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(prev => prev === msg ? null : prev);
+    }, 3200);
+  };
+
   // Empire / Custom Lesson Import Modal State
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importTitle, setImportTitle] = useState('');
@@ -87,7 +96,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'H�
   const handleImportEmpireLesson = (e: React.FormEvent) => {
     e.preventDefault();
     if (!importTitle.trim() || !importVideoUrl.trim()) {
-      alert('Vui lòng nhập tên bài giảng và đường dẫn video!');
+      showToast('⚠️ Vui lòng nhập tên bài giảng và đường dẫn video!');
       return;
     }
 
@@ -130,7 +139,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'H�
       setSelectedCourse(refreshedCourse);
       setSelectedLesson(newLesson);
     }
-    alert('Đã thêm bài giảng thành công! Bạn có thể xem ngay bây giờ.');
+    showToast('🎉 Đã thêm bài giảng thành công! Bạn có thể xem ngay bây giờ.');
   };
 
   const saveCourses = (updated: Course[]) => {
@@ -148,7 +157,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'H�
       localStorage.removeItem('eduviet_courses');
     } catch { /* noop */ }
     setCourses(INITIAL_COURSES);
-    alert('Đã cập nhật toàn bộ khóa học, video bài giảng và mẹo bấm máy mới nhất!');
+    showToast('✨ Đã cập nhật toàn bộ khóa học, video bài giảng và mẹo Casio mới nhất!');
   };
 
   // Toggle lesson completion
@@ -291,6 +300,13 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'H�
               <Calculator className="w-3.5 h-3.5 text-cyan-300" />
               <span>Bật Máy Tính Casio fx-580VN X Ảo</span>
             </button>
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-500/20 text-amber-200 border border-amber-400/40 text-xs font-semibold hover:bg-amber-500/30 transition-colors cursor-pointer"
+            >
+              <PlusCircle className="w-3.5 h-3.5 text-amber-300" />
+              <span>Nhập Bài Giảng Cá Nhân</span>
+            </button>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white/90 text-xs backdrop-blur-xs">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Video bài giảng kèm giáo trình tóm tắt
             </span>
@@ -310,10 +326,24 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'H�
         </div>
       </div>
 
+      {/* Floating In-App Toast */}
+      {toastMessage && (
+        <div className="fixed top-20 right-6 z-50 animate-bounce bg-slate-900/95 dark:bg-white text-white dark:text-slate-900 border border-purple-500/50 dark:border-purple-300 px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-2.5 backdrop-blur-md">
+          <span>{toastMessage}</span>
+          <button onClick={() => setToastMessage(null)} className="text-slate-400 hover:text-white dark:hover:text-black ml-1">✕</button>
+        </div>
+      )}
+
       {/* ── Modal Chi tiết khóa học & Xem bài giảng Video ────────── */}
       {selectedCourse && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-5xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh]">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in overflow-y-auto"
+          onClick={() => { setSelectedCourse(null); setSelectedLesson(null); }}
+        >
+          <div 
+            className="relative w-full max-w-5xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[calc(100dvh-1.5rem)] my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             
             {/* Top Bar */}
             <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-800/70">
@@ -614,8 +644,14 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'H�
 
       {/* ── Modal Chứng Chỉ Hoàn Thành Khóa Học (Certificate) ───── */}
       {activeCertificate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-2xl bg-gradient-to-b from-amber-50 to-white text-slate-900 rounded-3xl p-8 shadow-2xl border-4 border-amber-300 space-y-6 text-center">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in overflow-y-auto"
+          onClick={() => setActiveCertificate(null)}
+        >
+          <div 
+            className="relative w-full max-w-2xl bg-gradient-to-b from-amber-50 to-white text-slate-900 rounded-3xl p-5 sm:p-8 shadow-2xl border-4 border-amber-300 space-y-5 sm:space-y-6 text-center max-h-[calc(100dvh-2rem)] overflow-y-auto my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             
             <button
               onClick={() => setActiveCertificate(null)}
@@ -675,7 +711,7 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'H�
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
-                  alert('Đã sao chép liên kết chứng chỉ!');
+                  showToast('🔗 Đã sao chép liên kết chứng chỉ!');
                 }}
                 className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs cursor-pointer transition-all"
               >
@@ -690,8 +726,14 @@ export const CoursesView: React.FC<CoursesViewProps> = ({ currentUserName = 'H�
 
       {/* ── Modal Nhập bài giảng từ Empire / Drive / YouTube ── */}
       {isImportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 text-slate-800 dark:text-slate-100">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in overflow-y-auto"
+          onClick={() => setIsImportModalOpen(false)}
+        >
+          <div 
+            className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-7 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 sm:space-y-5 text-slate-800 dark:text-slate-100 max-h-[calc(100dvh-2rem)] overflow-y-auto my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">

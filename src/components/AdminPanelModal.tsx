@@ -398,13 +398,19 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   // Guard: only admin
   if (!isAdmin) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full text-center space-y-4 shadow-2xl border border-slate-200">
-          <div className="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-sm overflow-y-auto"
+        onClick={onClose}
+      >
+        <div 
+          className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center space-y-4 shadow-2xl border border-slate-200 dark:border-slate-800 my-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="w-14 h-14 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
             <Lock className="w-7 h-7" />
           </div>
-          <h3 className="text-lg font-bold text-slate-900 font-heading">Từ Chối Quyền Truy Cập</h3>
-          <p className="text-xs text-slate-600 leading-relaxed">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading">Từ Chối Quyền Truy Cập</h3>
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
             Chức năng này <strong>chỉ dành riêng cho Quản Trị Viên (Admin)</strong>.
             Tài khoản của bạn hiện là <span className="font-semibold">{currentUser?.role || 'Khách'}</span>.
           </p>
@@ -448,11 +454,15 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-sm overflow-y-auto"
+      onClick={onClose}
+    >
       <div
-        className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col"
+        className="w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[calc(100dvh-2rem)] flex flex-col my-auto"
         role="dialog"
         aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ─────────────────────────────────────────── */}
         <div className="p-6 pb-4 border-b border-slate-100 bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white flex items-center justify-between shrink-0">

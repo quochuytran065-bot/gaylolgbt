@@ -352,13 +352,13 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
   const isCriticalTime = secondsRemaining <= 60; // < 1 minute
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col pb-12">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col pb-12 transition-colors">
       
       {/* Casio Calculator floating widget */}
       <CasioCalculator isOpen={isCalcOpen} onClose={() => setIsCalcOpen(false)} />
 
       {/* Sticky Test Header Bar */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+      <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
           {/* Exam Title & Subject */}
@@ -369,28 +369,28 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                   onCancelExam();
                 }
               }}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               title="Thoát khỏi bài thi"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-bold text-slate-900 truncate font-heading">
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 truncate font-heading">
                   {exam.title}
                 </h2>
                 {exam.examCode && (
-                  <span className="px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 font-mono font-bold text-xs tracking-wider border border-sky-300">
+                  <span className="px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 font-mono font-bold text-xs tracking-wider border border-sky-300 dark:border-sky-800">
                     {exam.examCode}
                   </span>
                 )}
                 {exam.isBGDFormat && (
-                  <span className="hidden sm:inline-flex px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold text-[10px] tracking-wide uppercase">
+                  <span className="hidden sm:inline-flex px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 font-bold text-[10px] tracking-wide uppercase border border-amber-200 dark:border-amber-800">
                     Chuẩn BGD 2025
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                 <span>{exam.subject}</span>
                 <span aria-hidden="true">·</span>
                 <span>{exam.grade}</span>
@@ -409,8 +409,8 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
               title="Mở máy tính Casio FX-580VN X"
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
                 isCalcOpen
-                  ? 'bg-slate-800 border-slate-600 text-cyan-300'
-                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
+                  ? 'bg-slate-800 dark:bg-slate-700 border-slate-600 text-cyan-300'
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300'
               }`}
             >
               <Calculator className="w-4 h-4" />
@@ -421,20 +421,20 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
             <div 
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border font-mono font-bold text-sm sm:text-base transition-colors ${
                 isCriticalTime
-                  ? 'bg-rose-50 border-rose-300 text-rose-700 animate-pulse'
+                  ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-400 animate-pulse'
                   : isLowTime
-                  ? 'bg-amber-50 border-amber-300 text-amber-800'
-                  : 'bg-slate-50 border-slate-200 text-slate-800'
+                  ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300'
+                  : 'bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
               }`}
             >
-              <Clock className={`w-4 h-4 ${isCriticalTime ? 'text-rose-600' : isLowTime ? 'text-amber-600' : 'text-slate-500'}`} />
+              <Clock className={`w-4 h-4 ${isCriticalTime ? 'text-rose-600 dark:text-rose-400' : isLowTime ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`} />
               <span className="tabular-nums tracking-wider">{formatTime(secondsRemaining)}</span>
             </div>
 
             {/* Submit Button */}
             <button
               onClick={() => setIsSubmitModalOpen(true)}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm rounded-lg shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold text-xs sm:text-sm rounded-lg shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Send className="w-4 h-4" />
               <span>Nộp bài</span>
@@ -444,7 +444,7 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
         </div>
 
         {/* Progress bar based on answered questions */}
-        <div className="w-full bg-slate-200 h-1">
+        <div className="w-full bg-slate-200 dark:bg-slate-800 h-1">
           <div 
             className="bg-sky-600 h-1 transition-all duration-300"
             style={{ width: `${(answeredCount / exam.questions.length) * 100}%` }}
@@ -457,12 +457,12 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
         
         {/* Left Area: Current Question Card (8 Cols on Desktop) */}
         <div className="lg:col-span-8 space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 sm:p-8 space-y-6">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 sm:p-8 space-y-6 transition-colors">
             
             {/* Question Header & Flag control */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2.5 py-1 rounded-md bg-sky-100 text-sky-800 font-bold text-xs font-mono">
+                <span className="px-2.5 py-1 rounded-md bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 font-bold text-xs font-mono">
                   CÂU {currentQuestionIndex + 1}
                 </span>
 
@@ -470,10 +470,10 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                 {currentQuestion.part && (
                   <span className={`px-2.5 py-1 rounded-md font-bold text-xs ${
                     currentQuestion.part === 'I' 
-                      ? 'bg-blue-100 text-blue-800'
+                      ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300'
                       : currentQuestion.part === 'II'
-                      ? 'bg-amber-100 text-amber-800'
-                      : 'bg-emerald-100 text-emerald-800'
+                      ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300'
+                      : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
                   }`}>
                     {currentQuestion.part === 'I' && 'PHẦN I: TRẮC NGHIỆM 4 PHƯƠNG ÁN'}
                     {currentQuestion.part === 'II' && 'PHẦN II: TRẮC NGHIỆM ĐÚNG / SAI'}
@@ -482,7 +482,7 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                 )}
 
                 {currentQuestion.topic && (
-                  <span className="text-xs text-slate-400 hidden sm:inline">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline">
                     · Chuyên đề: {currentQuestion.topic}
                   </span>
                 )}
@@ -492,8 +492,8 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                 onClick={() => toggleFlag(currentQuestion.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                   isFlagged
-                    ? 'bg-amber-50 border-amber-300 text-amber-800 font-semibold'
-                    : 'border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                    ? 'bg-amber-50 dark:bg-amber-950/80 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 font-semibold'
+                    : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
                 <Flag className={`w-3.5 h-3.5 ${isFlagged ? 'fill-amber-500 text-amber-500' : ''}`} />
@@ -502,7 +502,7 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
             </div>
 
             {/* Question Text */}
-            <div className="text-base sm:text-lg font-medium text-slate-900 leading-relaxed">
+            <div className="text-base sm:text-lg font-medium text-slate-900 dark:text-slate-100 leading-relaxed">
               {currentQuestion.text}
             </div>
 
@@ -518,15 +518,15 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                       onClick={() => selectOption(option.key)}
                       className={`w-full text-left p-4 rounded-xl border transition-all flex items-start gap-3.5 cursor-pointer ${
                         isSelected
-                          ? 'bg-sky-50/90 border-sky-600 shadow-2xs text-slate-900 ring-1 ring-sky-600'
-                          : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/60 text-slate-700'
+                          ? 'bg-sky-50/90 dark:bg-sky-950/60 border-sky-600 dark:border-sky-500 shadow-2xs text-slate-900 dark:text-slate-100 ring-1 ring-sky-600 dark:ring-sky-500'
+                          : 'bg-white dark:bg-slate-850 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200'
                       }`}
                     >
                       <div 
                         className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${
                           isSelected 
                             ? 'bg-sky-700 text-white shadow-2xs' 
-                            : 'bg-slate-100 text-slate-600 border border-slate-200'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                         }`}
                       >
                         {option.key}
@@ -543,8 +543,8 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
             {/* CASE 2: PART II - True / False (4 Items a, b, c, d) */}
             {(currentQuestion.type === 'true_false' || currentQuestion.part === 'II') && currentQuestion.trueFalseItems && (
               <div className="space-y-4 pt-2">
-                <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                <div className="p-3 bg-amber-50/80 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-900/60 text-xs text-amber-900 dark:text-amber-300 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                   <span>
                     <strong>Cấu trúc chuẩn BGD:</strong> Mỗi câu gồm 4 lệnh hỏi a, b, c, d. Đúng 1 ý: 0.1đ · Đúng 2 ý: 0.25đ · Đúng 3 ý: 0.5đ · Đúng cả 4 ý: 1.0đ.
                   </span>
@@ -559,15 +559,15 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                         key={item.id}
                         className={`p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                           currentAnswer !== undefined 
-                            ? 'bg-slate-50/90 border-slate-300' 
-                            : 'bg-white border-slate-200'
+                            ? 'bg-slate-50/90 dark:bg-slate-800/80 border-slate-300 dark:border-slate-700' 
+                            : 'bg-white dark:bg-slate-850 border-slate-200 dark:border-slate-800'
                         }`}
                       >
                         <div className="flex items-start gap-3 flex-1">
-                          <span className="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 font-bold font-mono text-xs flex items-center justify-center shrink-0">
+                          <span className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold font-mono text-xs flex items-center justify-center shrink-0">
                             {item.id})
                           </span>
-                          <span className="text-sm sm:text-base text-slate-800 leading-snug pt-0.5">
+                          <span className="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-snug pt-0.5">
                             {item.text}
                           </span>
                         </div>
@@ -580,7 +580,7 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                             className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                               currentAnswer === true
                                 ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400'
-                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
+                                : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 hover:text-emerald-700 dark:hover:text-emerald-300 hover:border-emerald-300'
                             }`}
                           >
                             <Check className="w-3.5 h-3.5" />
@@ -593,7 +593,7 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                             className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                               currentAnswer === false
                                 ? 'bg-rose-600 text-white shadow-sm ring-2 ring-rose-400'
-                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300'
+                                : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950/60 hover:text-rose-700 dark:hover:text-rose-300 hover:border-rose-300'
                             }`}
                           >
                             <X className="w-3.5 h-3.5" />
@@ -610,15 +610,15 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
             {/* CASE 3: PART III - Short Answer (Numerical Input) */}
             {(currentQuestion.type === 'short_answer' || currentQuestion.part === 'III') && (
               <div className="space-y-4 pt-2">
-                <div className="p-4 bg-sky-50/80 rounded-xl border border-sky-200 text-xs text-sky-900 flex items-center gap-2">
-                  <FileCheck className="w-4 h-4 text-sky-700 shrink-0" />
+                <div className="p-4 bg-sky-50/80 dark:bg-sky-950/40 rounded-xl border border-sky-200 dark:border-sky-900/60 text-xs text-sky-900 dark:text-sky-300 flex items-center gap-2">
+                  <FileCheck className="w-4 h-4 text-sky-700 dark:text-sky-400 shrink-0" />
                   <span>
                     <strong>Hướng dẫn trả lời:</strong> Nhập kết quả dưới dạng số nguyên hoặc số thập phân (ví dụ: 4 hoặc 1.33). Không cần nhập đơn vị đo.
                   </span>
                 </div>
 
-                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                     Ô Điền Đáp Số Của Thí Sinh:
                   </label>
                   <div className="relative max-w-sm">
@@ -627,11 +627,11 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                       value={userShortAnswers[currentQuestion.id] || ''}
                       onChange={(e) => setShortAnswer(e.target.value)}
                       placeholder="Ví dụ: 7 hoặc 1.33"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 bg-white font-mono text-lg font-bold text-slate-900 outline-none transition-all shadow-xs"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-700 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900 bg-white dark:bg-slate-900 font-mono text-lg font-bold text-slate-900 dark:text-slate-100 outline-none transition-all shadow-xs"
                     />
                   </div>
                   {userShortAnswers[currentQuestion.id]?.trim() && (
-                    <div className="text-xs text-emerald-700 font-medium flex items-center gap-1">
+                    <div className="text-xs text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
                       <Check className="w-3.5 h-3.5" />
                       <span>Đã ghi nhận kết quả: <strong className="font-mono">{userShortAnswers[currentQuestion.id]}</strong></span>
                     </div>
@@ -641,17 +641,17 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
             )}
 
             {/* Bottom Nav inside question card: Prev / Next */}
-            <div className="flex items-center justify-between pt-6 border-t border-slate-100">
+            <div className="flex items-center justify-between pt-6 border-t border-slate-100 dark:border-slate-800">
               <button
                 onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
                 disabled={currentQuestionIndex === 0}
-                className="px-4 py-2 rounded-lg border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span>Câu trước</span>
               </button>
 
-              <span className="text-xs text-slate-400 hidden sm:inline">
+              <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline">
                 Câu {currentQuestionIndex + 1} / {exam.questions.length}
               </span>
 
@@ -679,29 +679,29 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
 
         {/* Right Area: Question Navigation Matrix (4 Cols on Desktop) */}
         <div className="lg:col-span-4 space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4 sticky top-24">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-5 space-y-4 sticky top-24 transition-colors">
             
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900 font-heading">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-heading">
                 Bảng danh sách câu hỏi
               </h3>
-              <div className="text-xs font-mono font-semibold text-slate-600">
+              <div className="text-xs font-mono font-semibold text-slate-600 dark:text-slate-400">
                 {answeredCount}/{exam.questions.length} đã làm
               </div>
             </div>
 
             {/* Status Legend */}
-            <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500 pb-2">
+            <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500 dark:text-slate-400 pb-2">
               <div className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded bg-sky-700"></span>
                 <span>Đã trả lời</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-white border border-slate-300"></span>
+                <span className="w-3 h-3 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700"></span>
                 <span>Chưa trả lời</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-amber-100 border border-amber-400"></span>
+                <span className="w-3 h-3 rounded bg-amber-100 dark:bg-amber-950/80 border border-amber-400 dark:border-amber-600"></span>
                 <span>Đã gắn cờ</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -723,22 +723,22 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                     onClick={() => setCurrentQuestionIndex(idx)}
                     className={`relative h-10 rounded-lg font-mono text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
                       isCurrent
-                        ? 'ring-2 ring-sky-600 ring-offset-1'
+                        ? 'ring-2 ring-sky-600 ring-offset-1 dark:ring-offset-slate-900'
                         : ''
                     } ${
                       isAnswered
                         ? 'bg-sky-700 text-white shadow-2xs hover:bg-sky-800'
-                        : 'bg-white border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     <span>{idx + 1}</span>
                     {q.part && (
-                      <span className="absolute -top-1 -left-1 text-[8px] px-1 bg-slate-200 text-slate-700 rounded-sm font-sans font-semibold">
+                      <span className="absolute -top-1 -left-1 text-[8px] px-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-sm font-sans font-semibold">
                         {q.part}
                       </span>
                     )}
                     {isFlag && (
-                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border border-white" />
+                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border border-white dark:border-slate-900" />
                     )}
                   </button>
                 );
@@ -746,19 +746,19 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
             </div>
 
             {/* Quick summary stats */}
-            <div className="pt-3 border-t border-slate-100 text-xs text-slate-600 space-y-1">
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 space-y-1">
               <div className="flex justify-between">
                 <span>Số câu đã làm:</span>
-                <strong className="text-slate-900">{answeredCount} câu</strong>
+                <strong className="text-slate-900 dark:text-slate-100">{answeredCount} câu</strong>
               </div>
               <div className="flex justify-between">
                 <span>Số câu còn lại:</span>
-                <strong className={remainingCount > 0 ? 'text-amber-600' : 'text-emerald-600'}>
+                <strong className={remainingCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
                   {remainingCount} câu
                 </strong>
               </div>
               {flaggedQuestions.length > 0 && (
-                <div className="flex justify-between text-amber-700">
+                <div className="flex justify-between text-amber-700 dark:text-amber-400">
                   <span>Cần xem lại:</span>
                   <strong>{flaggedQuestions.length} câu</strong>
                 </div>
@@ -768,7 +768,7 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
             {/* Submit CTA button */}
             <button
               onClick={() => setIsSubmitModalOpen(true)}
-              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Nộp bài & Xem kết quả</span>
@@ -781,50 +781,54 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
 
       {/* Confirmation Modal Before Submission */}
       {isSubmitModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto"
+          onClick={() => setIsSubmitModalOpen(false)}
+        >
           <div 
-            className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150"
+            className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150 transition-colors max-h-[calc(100dvh-2rem)] overflow-y-auto my-auto"
             role="dialog"
             aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <Send className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 font-heading">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 font-heading">
                   Xác nhận nộp bài kiểm tra?
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {exam.title}
                 </p>
               </div>
             </div>
 
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2 text-xs">
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-slate-600">Tổng số câu hỏi:</span>
-                <strong className="text-slate-900">{exam.questions.length} câu</strong>
+                <span className="text-slate-600 dark:text-slate-400">Tổng số câu hỏi:</span>
+                <strong className="text-slate-900 dark:text-slate-100">{exam.questions.length} câu</strong>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-600">Số câu đã hoàn thành:</span>
-                <strong className="text-emerald-700">{answeredCount} câu</strong>
+                <span className="text-slate-600 dark:text-slate-400">Số câu đã hoàn thành:</span>
+                <strong className="text-emerald-700 dark:text-emerald-400">{answeredCount} câu</strong>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-600">Số câu chưa làm:</span>
-                <strong className={remainingCount > 0 ? 'text-rose-600' : 'text-slate-500'}>
+                <span className="text-slate-600 dark:text-slate-400">Số câu chưa làm:</span>
+                <strong className={remainingCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}>
                   {remainingCount} câu
                 </strong>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-600">Thời gian làm bài còn:</span>
-                <strong className="font-mono text-slate-900">{formatTime(secondsRemaining)}</strong>
+                <span className="text-slate-600 dark:text-slate-400">Thời gian làm bài còn:</span>
+                <strong className="font-mono text-slate-900 dark:text-slate-100">{formatTime(secondsRemaining)}</strong>
               </div>
             </div>
 
             {remainingCount > 0 && (
-              <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg text-xs text-amber-800 border border-amber-200">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+              <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/40 rounded-lg text-xs text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                 <span>
                   Bạn còn <strong>{remainingCount}</strong> câu chưa làm xong. Các câu chưa làm sẽ được tính là 0 điểm.
                 </span>
@@ -834,7 +838,7 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 onClick={() => setIsSubmitModalOpen(false)}
-                className="px-4 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 Tiếp tục làm bài
               </button>
@@ -843,7 +847,7 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                   setIsSubmitModalOpen(false);
                   handleSubmitExam();
                 }}
-                className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
               >
                 Xác nhận nộp bài
               </button>
@@ -855,15 +859,15 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
       {/* Auto Submit When Time Runs Out Alert */}
       {isTimeUpAlert && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white rounded-2xl p-6 text-center space-y-4 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200">
-            <div className="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl p-6 text-center space-y-4 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
               <Clock className="w-8 h-8" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900 font-heading">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 font-heading">
                 Đã hết thời gian làm bài!
               </h3>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Hệ thống đang tiến hành chấm điểm và lưu kết quả của bạn...
               </p>
             </div>

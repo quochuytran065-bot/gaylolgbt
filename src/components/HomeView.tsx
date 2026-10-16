@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { DocumentItem, Exam } from '../types';
+import { AppTab } from './Navbar';
 import { useAuth } from '../context/AuthContext';
 import { 
   BookOpen, 
@@ -17,14 +18,21 @@ import {
   Flame,
   Zap,
   Brain,
-  BarChart3
+  BarChart3,
+  Compass,
+  Headphones,
+  BookmarkPlus,
+  ShieldCheck,
+  ChevronRight,
+  DoorOpen,
+  KeyRound
 } from 'lucide-react';
 import { HERO_IMAGE } from '../data/mockData';
 
 interface HomeViewProps {
   documents: DocumentItem[];
   exams: Exam[];
-  onSelectTab: (tab: 'home' | 'documents' | 'exams' | 'history' | 'analytics') => void;
+  onSelectTab: (tab: AppTab) => void;
   onSelectDocument: (doc: DocumentItem) => void;
   onStartExam: (exam: Exam) => void;
 }
@@ -38,14 +46,124 @@ export const HomeView: React.FC<HomeViewProps> = ({
 }) => {
   const { currentUser, openAuthModal } = useAuth();
 
+  // Live countdown to THPT Exam (End of June 2026)
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const calculateCountdown = () => {
+      const targetDate = new Date('2026-06-25T07:30:00+07:00').getTime();
+      const now = new Date().getTime();
+      const diff = Math.max(0, targetDate - now);
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setCountdown({ days, hours, minutes, seconds });
+    };
+
+    calculateCountdown();
+    const interval = setInterval(calculateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // LMS360 Room Code Entry State
+  const [roomCode, setRoomCode] = useState('');
+  const [roomError, setRoomError] = useState('');
+
+  const handleEnterRoom = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = roomCode.trim().toLowerCase();
+    if (!trimmed) {
+      setRoomError('Vui lòng nhập mã phòng thi hoặc mã ca thi!');
+      return;
+    }
+    setRoomError('');
+    
+    // Search in exams
+    const matched = exams.find(ex => 
+      ex.id.toLowerCase() === trimmed || 
+      ex.id.toLowerCase().includes(trimmed) ||
+      ex.title.toLowerCase().includes(trimmed) ||
+      ex.subject.toLowerCase().includes(trimmed)
+    );
+
+    if (matched) {
+      onStartExam(matched);
+    } else if (exams.length > 0) {
+      // Pick first or BGD format exam
+      const bgd = exams.find(e => e.isBGDFormat);
+      onStartExam(bgd || exams[0]);
+    } else {
+      setRoomError('Không tìm thấy ca thi phù hợp. Vui lòng thử lại!');
+    }
+  };
+
   const featuredDocs = documents.slice(0, 3);
   // Pick BGD format exams first to highlight them
   const bgdExams = exams.filter(e => e.isBGDFormat);
   const featuredExams = bgdExams.length > 0 ? bgdExams.slice(0, 3) : exams.slice(0, 3);
 
+  // Quick subjects navigation
+  const SUBJECTS = [
+    { name: 'Toán học', icon: '📐', count: '120+ đề', color: 'from-blue-500 to-indigo-600' },
+    { name: 'Vật lý', icon: '⚡', count: '85+ đề', color: 'from-cyan-500 to-blue-600' },
+    { name: 'Hóa học', icon: '🧪', count: '90+ đề', color: 'from-emerald-500 to-teal-600' },
+    { name: 'Sinh học', icon: '🧬', count: '70+ đề', color: 'from-green-500 to-emerald-600' },
+    { name: 'Tiếng Anh', icon: '🌐', count: '110+ đề', color: 'from-amber-500 to-orange-600' },
+    { name: 'Ngữ văn', icon: '📖', count: '65+ đề', color: 'from-rose-500 to-pink-600' },
+    { name: 'ĐGNL HSA/VNU', icon: '🎯', count: '45+ đề', color: 'from-purple-500 to-violet-600' },
+  ];
+
   return (
-    <div className="space-y-24 pb-24">
+    <div className="space-y-16 pb-24">
       
+      {/* ── THPT 2026 Countdown Ticker Bar ───────────────────── */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-sky-500/10 to-indigo-500/10 dark:from-amber-950/30 dark:via-sky-950/30 dark:to-indigo-950/30 border border-amber-300/40 dark:border-amber-700/40 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4 transition-all shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <Flame className="w-5 h-5 fill-current animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                Đếm Ngược Kỳ Thi Tốt Nghiệp THPT 2026
+              </span>
+              <span className="px-2 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950 text-[10px] font-bold text-amber-800 dark:text-amber-300">
+                Chính thức
+              </span>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+              Thời gian quý báu để bứt phá điểm số cùng lộ trình chuẩn Bộ GD&ĐT 2025.
+            </p>
+          </div>
+        </div>
+
+        {/* Digital Clock Boxes */}
+        <div className="flex items-center gap-2 font-mono">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl text-center shadow-xs">
+            <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">{countdown.days}</span>
+            <span className="text-[10px] text-slate-400 block uppercase font-sans font-medium">Ngày</span>
+          </div>
+          <span className="text-slate-400 font-bold">:</span>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl text-center shadow-xs">
+            <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">{String(countdown.hours).padStart(2, '0')}</span>
+            <span className="text-[10px] text-slate-400 block uppercase font-sans font-medium">Giờ</span>
+          </div>
+          <span className="text-slate-400 font-bold">:</span>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl text-center shadow-xs">
+            <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">{String(countdown.minutes).padStart(2, '0')}</span>
+            <span className="text-[10px] text-slate-400 block uppercase font-sans font-medium">Phút</span>
+          </div>
+          <span className="text-slate-400 font-bold">:</span>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl text-center shadow-xs">
+            <span className="text-lg sm:text-xl font-bold text-amber-600 dark:text-amber-400">{String(countdown.seconds).padStart(2, '0')}</span>
+            <span className="text-[10px] text-slate-400 block uppercase font-sans font-medium">Giây</span>
+          </div>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="relative rounded-3xl bg-gradient-to-br from-slate-900 via-sky-950 to-indigo-950 text-white overflow-hidden shadow-xl border border-sky-900/40">
         <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[460px]">
@@ -66,7 +184,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </h1>
 
               <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
-                Tích hợp đề thi 3 phần chuẩn format Bộ Giáo Dục 2025, hệ thống tự động phân tích điểm số khi làm sai, theo dõi chuỗi ngày học và đếm ngược thời gian hướng đến mục tiêu điểm Aim mong muốn.
+                Tích hợp đề thi 3 phần chuẩn format Bộ Giáo Dục 2025, hệ thống tự động phân tích điểm số khi làm sai, phòng tự học Pomodoro chung và theo dõi chuỗi ngày học liên tục.
               </p>
             </div>
 
@@ -74,26 +192,26 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 onClick={() => onSelectTab('exams')}
-                className="px-6 py-3.5 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-500 hover:to-sky-400 text-white font-semibold text-sm rounded-xl shadow-lg flex items-center gap-2 transition-all cursor-pointer hover:shadow-sky-500/25"
+                className="px-6 py-3.5 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-500 hover:to-sky-400 text-white font-semibold text-sm rounded-xl shadow-lg flex items-center gap-2 transition-all cursor-pointer hover:shadow-sky-500/25 active:scale-95"
               >
                 <Play className="w-4 h-4 fill-white" />
                 <span>Làm bài kiểm tra ngay</span>
               </button>
 
               <button
-                onClick={() => onSelectTab('analytics')}
-                className="px-5 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold text-sm rounded-xl shadow-lg flex items-center gap-2 transition-all cursor-pointer hover:shadow-amber-500/25"
+                onClick={() => onSelectTab('focus')}
+                className="px-5 py-3.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-semibold text-sm rounded-xl shadow-lg flex items-center gap-2 transition-all cursor-pointer hover:shadow-teal-500/25 active:scale-95"
               >
-                <Target className="w-4 h-4" />
-                <span>Mục tiêu & Phân tích Aim</span>
+                <Headphones className="w-4 h-4" />
+                <span>Phòng tự học chung</span>
               </button>
 
               <button
-                onClick={() => onSelectTab('documents')}
-                className="px-5 py-3.5 bg-slate-800/80 hover:bg-slate-700/80 text-slate-100 font-semibold text-sm rounded-xl border border-slate-700 flex items-center gap-2 transition-all cursor-pointer"
+                onClick={() => onSelectTab('analytics')}
+                className="px-5 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold text-sm rounded-xl shadow-lg flex items-center gap-2 transition-all cursor-pointer hover:shadow-amber-500/25 active:scale-95"
               >
-                <BookOpen className="w-4 h-4 text-sky-300" />
-                <span>Kho tài liệu</span>
+                <Target className="w-4 h-4" />
+                <span>Mục tiêu Aim 9.0+</span>
               </button>
             </div>
 
@@ -109,7 +227,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-sky-400" />
-                <span>Đếm ngược ngày thi THPT</span>
+                <span>Tự động tính điểm bậc thang</span>
               </div>
             </div>
           </div>
@@ -133,6 +251,124 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </div>
           </div>
 
+        </div>
+      </section>
+
+      {/* ── LMS360 / TEST360 Quick Room Entry Widget ────────── */}
+      <section className="bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 border border-blue-500/30 text-white shadow-xl relative overflow-hidden">
+        <div className="relative z-10 max-w-3xl mx-auto text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs font-bold uppercase tracking-wider">
+            <DoorOpen className="w-4 h-4 text-amber-400" />
+            <span>TEST360 · PHÒNG KHẢO THÍ TRỰC TUYẾN</span>
+          </div>
+
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold font-heading text-white">
+            Nhập Mã Phòng Thi / Ca Thi Để Vào Thi Ngay
+          </h2>
+          <p className="text-xs sm:text-sm text-blue-200/90 max-w-xl mx-auto leading-relaxed">
+            Hệ thống tự động nhận diện ca thi trắc nghiệm, bấm giờ làm bài và tính điểm tự động theo chuẩn cấu trúc mới.
+          </p>
+
+          {/* Form */}
+          <form onSubmit={handleEnterRoom} className="max-w-xl mx-auto space-y-3 pt-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 p-1.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-lg">
+              <div className="relative flex-1 w-full">
+                <KeyRound className="w-5 h-5 text-blue-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={roomCode}
+                  onChange={(e) => {
+                    setRoomCode(e.target.value);
+                    if (roomError) setRoomError('');
+                  }}
+                  placeholder="Nhập mã phòng thi (VD: TOAN12, BGD, THPT, DGNL)..."
+                  className="w-full pl-11 pr-4 py-3 bg-transparent text-sm text-white placeholder-blue-300/70 outline-none font-mono font-bold uppercase tracking-wider"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold text-sm shadow-md transition-all cursor-pointer whitespace-nowrap active:scale-95 flex items-center justify-center gap-2"
+              >
+                <Play className="w-4 h-4 fill-white" />
+                <span>VÀO PHÒNG THI</span>
+              </button>
+            </div>
+
+            {roomError && (
+              <p className="text-xs text-rose-300 font-semibold text-center">{roomError}</p>
+            )}
+
+            {/* Suggested Quick Room Codes */}
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-1 text-xs">
+              <span className="text-blue-300/80 font-medium">Ca thi mở sẵn:</span>
+              {[
+                { code: 'TOAN-12', label: 'Toán học' },
+                { code: 'BGD-2026', label: 'Format BGD' },
+                { code: 'DGNL', label: 'ĐGNL' },
+                { code: 'TIENG-ANH', label: 'Tiếng Anh' }
+              ].map(item => (
+                <button
+                  key={item.code}
+                  type="button"
+                  onClick={() => {
+                    setRoomCode(item.code);
+                    const match = exams.find(e => 
+                      e.title.toLowerCase().includes(item.label.toLowerCase()) || 
+                      e.subject.toLowerCase().includes(item.label.toLowerCase())
+                    ) || exams[0];
+                    if (match) onStartExam(match);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-blue-200 border border-white/15 text-[11px] font-mono font-bold transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <Sparkles className="w-3 h-3 text-amber-400" />
+                  <span>{item.code} ({item.label})</span>
+                </button>
+              ))}
+            </div>
+          </form>
+        </div>
+      </section>
+
+      {/* ── Quick Subjects Filter Carousel ───────────────────── */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-xs font-bold text-sky-700 dark:text-sky-400 tracking-wider uppercase block">
+              CHỌN MÔN HỌC BẠN MUỐN BẮT ĐẦU
+            </span>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 font-heading">
+              Khám Phá Đề Thi Theo Môn
+            </h2>
+          </div>
+          <button
+            onClick={() => onSelectTab('exams')}
+            className="text-xs font-semibold text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 flex items-center gap-1 cursor-pointer transition-colors"
+          >
+            <span>Tất cả môn</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+          {SUBJECTS.map((sub, i) => (
+            <div
+              key={i}
+              onClick={() => onSelectTab(sub.name === 'ĐGNL HSA/VNU' ? 'dgnl' : 'exams')}
+              className="group p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-sky-400 dark:hover:border-sky-600 shadow-2xs hover:shadow-md transition-all cursor-pointer flex flex-col items-center text-center space-y-2 hover:-translate-y-0.5"
+            >
+              <span className="text-2xl transform group-hover:scale-110 transition-transform">
+                {sub.icon}
+              </span>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 line-clamp-1">
+                  {sub.name}
+                </h4>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                  {sub.count}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -332,6 +568,132 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ── Modern Education Hubs: Focus Room, Smart Notebook, Arena, DGNL ── */}
+      <section className="space-y-6">
+        <div>
+          <span className="text-xs font-bold text-sky-700 dark:text-sky-400 tracking-wider uppercase block">
+            HỆ SINH THÁI TỰ HỌC TOÀN DIỆN
+          </span>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 font-heading">
+            Công Cụ Bứt Phá Điểm Số Dành Riêng Cho Học Sinh Việt Nam
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          {/* Hub 1: Focus Study Room */}
+          <div 
+            onClick={() => onSelectTab('focus')}
+            className="p-6 rounded-3xl bg-gradient-to-br from-teal-500/10 via-emerald-500/5 to-transparent border border-teal-500/20 dark:border-teal-700/30 hover:border-teal-400 dark:hover:border-teal-500 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between space-y-4"
+          >
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Headphones className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 font-heading">
+                Phòng Tự Học Chung
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Kỹ thuật Pomodoro 25/5 khoa học, âm thanh thư giãn sóng não và tự học cùng 48+ bạn học khắp 63 tỉnh thành.
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-teal-700 dark:text-teal-400 group-hover:translate-x-1 transition-transform">
+              Vào phòng học <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
+
+          {/* Hub 2: Smart Notebook */}
+          <div 
+            onClick={() => onSelectTab('notebook')}
+            className="p-6 rounded-3xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border border-amber-500/20 dark:border-amber-700/30 hover:border-amber-400 dark:hover:border-amber-500 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between space-y-4"
+          >
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <BookmarkPlus className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 font-heading">
+                Sổ Tay Bẫy Đề & Công Thức
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Tự động lưu trữ các câu làm sai khi thi thử, gắn nhãn lỗi sai (Lý thuyết, Bẫy đề) để ôn tập tập trung.
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 dark:text-amber-400 group-hover:translate-x-1 transition-transform">
+              Mở sổ tay <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
+
+          {/* Hub 3: Arena */}
+          <div 
+            onClick={() => onSelectTab('arena')}
+            className="p-6 rounded-3xl bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-indigo-500/20 dark:border-indigo-700/30 hover:border-indigo-400 dark:hover:border-indigo-500 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between space-y-4"
+          >
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Award className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 font-heading">
+                Đấu Trường Tri Thức
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Thi đua tốc độ giải đề trắc nghiệm thời gian thực, leo bảng xếp hạng tuần và nhận huy hiệu danh giá.
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 dark:text-indigo-400 group-hover:translate-x-1 transition-transform">
+              Vào đấu trường <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
+
+          {/* Hub 4: DGNL Hub */}
+          <div 
+            onClick={() => onSelectTab('dgnl')}
+            className="p-6 rounded-3xl bg-gradient-to-br from-purple-500/10 via-pink-500/5 to-transparent border border-purple-500/20 dark:border-purple-700/30 hover:border-purple-400 dark:hover:border-purple-500 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between space-y-4"
+          >
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Compass className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 font-heading">
+                Cổng Luyện Thi ĐGNL
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Đề thi chuẩn cấu trúc ĐHQG Hà Nội (HSA) & ĐHQG TP.HCM: Định lượng, Định tính và Khoa học ứng dụng.
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-purple-700 dark:text-purple-400 group-hover:translate-x-1 transition-transform">
+              Luyện thi ĐGNL <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── Daily Exam Strategy Tip Banner ── */}
+      <section className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-sky-900 via-indigo-950 to-slate-900 text-white border border-sky-800/40 relative overflow-hidden shadow-lg">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
+              <Sparkles className="w-4 h-4 fill-amber-400" />
+              <span>Mẹo Chiến Thuật Thi THPT 2026 Từ Thủ Khoa</span>
+            </div>
+            <h3 className="text-lg sm:text-xl font-bold font-heading text-white">
+              Quy tắc vàng Phần II (Đúng / Sai) Bộ Giáo Dục:
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Điểm số tăng bậc thang (1 ý đúng = 0.1đ · 2 ý = 0.25đ · 3 ý = 0.5đ · 4 ý = 1.0đ). Hãy ưu tiên chứng minh cẩn thận từng ý phụ thuộc thay vì đánh cược, bởi chỉ cần sai 1 ý là mất ngay một nửa số điểm của câu đó!
+            </p>
+          </div>
+
+          <button
+            onClick={() => onSelectTab('exams')}
+            className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs sm:text-sm shrink-0 shadow-lg transition-all cursor-pointer hover:shadow-amber-500/25 active:scale-95 flex items-center justify-center gap-2"
+          >
+            <Play className="w-4 h-4 fill-white" />
+            <span>Thực hành đề BGD ngay</span>
+          </button>
         </div>
       </section>
 

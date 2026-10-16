@@ -80,12 +80,14 @@ export const ExamList: React.FC<ExamListProps> = ({
   const [bgdOnlyFilter, setBgdOnlyFilter] = useState(false);
   const [generatorSubject, setGeneratorSubject] = useState<Subject>('Toán học');
   const [generatorProfile, setGeneratorProfile] = useState<ExamDifficultyProfile>('normal');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(exams.length === 0);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 900);
-    return () => clearTimeout(timer);
-  }, []);
+    if (isLoading) {
+      const timer = setTimeout(() => setIsLoading(false), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
 
   // Map highest score per examId
   const examStats = useMemo(() => {

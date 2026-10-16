@@ -17,6 +17,7 @@ import { CommunityForumView } from './components/CommunityForumView';
 import { UserHistoryModal } from './components/UserHistoryModal';
 import { AuthModal } from './components/AuthModal';
 import { AdminPanelModal } from './components/AdminPanelModal';
+import { AdminDashboardView } from './components/AdminDashboardView';
 import { Footer } from './components/Footer';
 import { DocumentItem, Exam, ExamResult, Question, StudyGoal, Subject, GradeLevel } from './types';
 import { DEFAULT_STUDY_GOAL, INITIAL_DOCUMENTS, INITIAL_EXAMS } from './data/mockData';
@@ -313,6 +314,23 @@ function MainApp() {
                 onUpdateGoal={handleUpdateGoal}
                 onViewResult={(res) => {
                   setActiveResult(res);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            )}
+
+            {activeTab === 'admin' && (
+              <AdminDashboardView
+                exams={exams}
+                documents={documents}
+                studyGoal={studyGoal}
+                onUpdateGoal={handleUpdateGoal}
+                onAddExam={handleAddExam}
+                onDeleteExam={handleDeleteExam}
+                onAddDocument={handleAddDocument}
+                onDeleteDocument={handleDeleteDocument}
+                onBackToUserView={() => {
+                  setActiveTab('home');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
               />

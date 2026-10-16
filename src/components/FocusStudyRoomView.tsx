@@ -13,7 +13,9 @@ import {
   Coffee,
   CheckCircle2,
   Headphones,
-  Maximize2
+  Maximize2,
+  X,
+  Bell
 } from 'lucide-react';
 import { FocusParticipant, AmbientSoundType } from '../types';
 import { INITIAL_FOCUS_PARTICIPANTS } from '../data/learningPlatformData';
@@ -25,9 +27,16 @@ export const FocusStudyRoomView: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [sessionsCompleted, setSessionsCompleted] = useState(3);
   
+  // In-app Notification instead of blocking window.alert
+  const [bannerNotification, setBannerNotification] = useState<{
+    title: string;
+    message: string;
+    icon: 'success' | 'break';
+  } | null>(null);
+
   // Ambient Sound State
   const [selectedSound, setSelectedSound] = useState<AmbientSoundType>('lofi');
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   
   // User Focus Task
   const [userTask, setUserTask] = useState('Ôn tập 50 câu trắc nghiệm Toán 12');
@@ -37,9 +46,9 @@ export const FocusStudyRoomView: React.FC = () => {
   // Participants
   const [participants, setParticipants] = useState<FocusParticipant[]>(INITIAL_FOCUS_PARTICIPANTS);
 
-  // Web Audio Noise Generator (White/Brown/Pink noise for focus)
+  // Web Audio Noise Generator (Filtered soothing noise for focus)
   const audioContextRef = useRef<AudioContext | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
+  const noiseSourceRef = useRef<AudioNode | null>(null);
 
   // Switch pomodoro modes
   const handleSwitchMode = (newMode: 'focus' | 'shortBreak' | 'longBreak') => {
@@ -58,10 +67,18 @@ export const FocusStudyRoomView: React.FC = () => {
       setIsRunning(false);
       if (mode === 'focus') {
         setSessionsCompleted(prev => prev + 1);
-        alert('🎉 Chúc mừng bạn đã hoàn thành một phiên tập trung 25 phút! Hãy nghỉ ngơi 5 phút nhé.');
+        setBannerNotification({
+          title: '🎉 Hoàn thành phiên tập trung!',
+          message: 'Bạn đã hoàn thành xuất sắc 25 phút tập trung cao độ. Hãy đứng dậy vươn vai và nghỉ ngơi 5 phút nhé!',
+          icon: 'success'
+        });
         handleSwitchMode('shortBreak');
       } else {
-        alert('⏰ Hết giờ giải lao! Cùng quay lại phiên tập trung tiếp theo nào.');
+        setBannerNotification({
+          title: '⏰ Đã hết giờ giải lao!',
+          message: 'Thời gian nghỉ đã kết thúc. Hãy sẵn sàng cho phiên tập trung tiếp theo với tinh thần sảng khoái!',
+          icon: 'break'
+        });
         handleSwitchMode('focus');
       }
       return;
@@ -86,7 +103,36 @@ export const FocusStudyRoomView: React.FC = () => {
     try {
       if (!audioContextRef.current) {
         const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        audioContextRef.current = new AudioCtx();
+        const ctx = new AudioCtx();
+        audioContextRef.current = ctx;
+
+        // Generate 5s buffer of soothing ambient noise
+        const bufferSize = ctx.sampleRate * 4;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        let lastOut = 0.0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          lastOut = (lastOut + 0.02 * white) / 1.02; // Brown/pink filter
+          data[i] = lastOut * 0.15;
+        }
+
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        noise.loop = true;
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 500;
+
+        const gainNode = ctx.createGain();
+        gainNode.gain.value = 0.12;
+
+        noise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        noise.start(0);
+        noiseSourceRef.current = noise;
       }
 
       if (audioContextRef.current.state === 'suspended') {
@@ -136,22 +182,47 @@ export const FocusStudyRoomView: React.FC = () => {
         </div>
       </div>
 
+      {/* ── Optional Notification Banner ─────────────────────── */}
+      {bannerNotification && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-teal-500/10 dark:from-teal-950/40 dark:via-emerald-950/40 dark:to-teal-950/40 border border-teal-500/30 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+              <Bell className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                {bannerNotification.title}
+              </h4>
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                {bannerNotification.message}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setBannerNotification(null)}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* ── Main Workspace Grid ───────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Column: Pomodoro Timer & Controls (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
           
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-8 shadow-xs flex flex-col items-center justify-center text-center space-y-6 relative overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 shadow-xs flex flex-col items-center justify-center text-center space-y-6 relative overflow-hidden transition-colors">
             
             {/* Mode Tabs */}
-            <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-900/80 rounded-2xl text-xs font-bold">
+            <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-bold">
               <button
                 onClick={() => handleSwitchMode('focus')}
                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
                   mode === 'focus'
                     ? 'bg-teal-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
                 Tập trung (25p)
@@ -161,7 +232,7 @@ export const FocusStudyRoomView: React.FC = () => {
                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
                   mode === 'shortBreak'
                     ? 'bg-amber-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
                 Nghỉ ngắn (5p)
@@ -171,7 +242,7 @@ export const FocusStudyRoomView: React.FC = () => {
                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
                   mode === 'longBreak'
                     ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
                 Nghỉ dài (15p)
@@ -185,7 +256,7 @@ export const FocusStudyRoomView: React.FC = () => {
                   cx="128"
                   cy="128"
                   r="110"
-                  className="stroke-slate-100 dark:stroke-slate-700 fill-none"
+                  className="stroke-slate-100 dark:stroke-slate-800 fill-none"
                   strokeWidth="10"
                 />
                 <circle
@@ -206,7 +277,7 @@ export const FocusStudyRoomView: React.FC = () => {
                 <span className="text-5xl font-black font-mono tracking-tight text-slate-900 dark:text-slate-100">
                   {formatTime(timeLeft)}
                 </span>
-                <span className="text-xs font-semibold text-slate-400 mt-2 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-2 uppercase tracking-wider">
                   {mode === 'focus' ? '🎯 Đang tập trung' : '☕ Thời gian nghỉ ngơi'}
                 </span>
               </div>
@@ -229,24 +300,24 @@ export const FocusStudyRoomView: React.FC = () => {
               <button
                 onClick={() => handleSwitchMode(mode)}
                 title="Đặt lại đồng hồ"
-                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
             </div>
 
             {/* Sessions count */}
-            <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
+            <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 font-medium">
               <CheckCircle2 className="w-4 h-4 text-teal-500" />
-              <span>Hôm nay bạn đã hoàn thành: <strong>{sessionsCompleted} phiên Pomodoro</strong> (75 phút)</span>
+              <span>Hôm nay bạn đã hoàn thành: <strong className="text-slate-700 dark:text-slate-300">{sessionsCompleted} phiên Pomodoro</strong> (75 phút)</span>
             </div>
           </div>
 
           {/* Ambient Sound Selector */}
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 shadow-xs space-y-3">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3 transition-colors">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
-                <Headphones className="w-4 h-4 text-teal-600" />
+                <Headphones className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                 Âm Thanh Nền Kích Thích Tập Trung
               </h4>
               <button
@@ -273,7 +344,7 @@ export const FocusStudyRoomView: React.FC = () => {
                   className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
                     selectedSound === s.id && !isMuted
                       ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-500 text-teal-800 dark:text-teal-200 shadow-xs'
-                      : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                      : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                   }`}
                 >
                   <span className="block text-lg mb-1">{s.icon}</span>
@@ -289,7 +360,7 @@ export const FocusStudyRoomView: React.FC = () => {
         <div className="lg:col-span-5 space-y-6">
           
           {/* User's own focus card & task */}
-          <div className="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-slate-800 dark:to-slate-800/80 rounded-3xl border border-teal-200 dark:border-slate-700 p-5 space-y-3">
+          <div className="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-slate-900 dark:to-slate-900/80 rounded-3xl border border-teal-200 dark:border-slate-800 p-5 space-y-3 transition-colors">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Nhiệm vụ phiên học này
@@ -297,9 +368,9 @@ export const FocusStudyRoomView: React.FC = () => {
               <button
                 onClick={() => setUserCamOn(!userCamOn)}
                 title={userCamOn ? 'Tắt camera mô phỏng' : 'Bật camera mô phỏng'}
-                className="text-xs text-slate-500 flex items-center gap-1 hover:text-teal-600 cursor-pointer"
+                className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 hover:text-teal-600 dark:hover:text-teal-400 cursor-pointer"
               >
-                {userCamOn ? <Camera className="w-3.5 h-3.5 text-teal-600" /> : <CameraOff className="w-3.5 h-3.5" />}
+                {userCamOn ? <Camera className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" /> : <CameraOff className="w-3.5 h-3.5" />}
                 <span>{userCamOn ? 'Cam Bật' : 'Cam Tắt'}</span>
               </button>
             </div>
@@ -310,11 +381,11 @@ export const FocusStudyRoomView: React.FC = () => {
                   type="text"
                   value={userTask}
                   onChange={(e) => setUserTask(e.target.value)}
-                  className="flex-1 p-2 text-xs rounded-xl border border-teal-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100"
+                  className="flex-1 p-2 text-xs rounded-xl border border-teal-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-1 focus:ring-teal-500"
                 />
                 <button
                   onClick={() => setIsEditingTask(false)}
-                  className="px-3 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold cursor-pointer"
+                  className="px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors"
                 >
                   Lưu
                 </button>
@@ -322,32 +393,32 @@ export const FocusStudyRoomView: React.FC = () => {
             ) : (
               <div 
                 onClick={() => setIsEditingTask(true)}
-                className="p-3 bg-white dark:bg-slate-900/60 rounded-2xl border border-teal-100 dark:border-slate-700/80 text-xs font-medium text-slate-800 dark:text-slate-200 flex items-center justify-between cursor-pointer hover:border-teal-300"
+                className="p-3 bg-white dark:bg-slate-800/80 rounded-2xl border border-teal-100 dark:border-slate-800 text-xs font-medium text-slate-800 dark:text-slate-200 flex items-center justify-between cursor-pointer hover:border-teal-300 dark:hover:border-slate-700 transition-colors"
               >
                 <span>🎯 {userTask}</span>
-                <span className="text-[10px] text-teal-600 underline">Đổi</span>
+                <span className="text-[10px] text-teal-600 dark:text-teal-400 underline">Đổi</span>
               </div>
             )}
           </div>
 
           {/* Virtual Participants List (Study Together) */}
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-3">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4 transition-colors">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
-                <Users className="w-4 h-4 text-emerald-600" />
+                <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 Bạn Học Cùng Phòng Đang Online
               </h4>
-              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Trực tuyến
               </span>
             </div>
 
             <div className="space-y-3">
               {participants.map(p => (
-                <div key={p.id} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+                <div key={p.id} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <img src={p.avatar} alt={p.name} className="w-10 h-10 rounded-full object-cover border-2 border-emerald-400" />
+                      <img src={p.avatar} alt={p.name} className="w-10 h-10 rounded-full object-cover border-2 border-emerald-400 dark:border-emerald-500" />
                       <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
                     </div>
                     <div>
@@ -359,14 +430,14 @@ export const FocusStudyRoomView: React.FC = () => {
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="text-[10px] text-slate-400 block">Tập trung</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block">Tập trung</span>
                     <strong className="text-xs text-teal-600 dark:text-teal-400">{p.focusMinutesToday} phút</strong>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 text-center text-xs text-slate-500 dark:text-slate-400">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-center text-xs text-slate-500 dark:text-slate-400">
               💡 <em>"Nhìn thấy những bạn khác đang nỗ lực chăm chỉ sẽ giúp bạn duy trì kỷ luật và không từ bỏ!"</em>
             </div>
           </div>
