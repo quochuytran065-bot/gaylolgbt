@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { 
   X, 
   CheckCircle, 
@@ -16,6 +17,7 @@ import {
 
 export const AuthModal: React.FC = () => {
   const { isAuthModalOpen, closeAuthModal, login, register, loginAsAdmin, loginAsDemo } = useAuth();
+  const toast = useToast();
   const [tab, setTab] = useState<'login' | 'register'>('login');
   const [loginRole, setLoginRole] = useState<'student' | 'admin'>('student');
 
@@ -74,12 +76,14 @@ export const AuthModal: React.FC = () => {
     const res = login(loginUsername, loginPassword);
     if (res.success) {
       setSuccessMsg(res.message);
+      toast.success('🎉 Đăng nhập thành công!', `Chào mừng trở lại!`);
       setTimeout(() => {
         closeAuthModal();
         setSuccessMsg('');
-      }, 600);
+      }, 400);
     } else {
       setErrorMsg(res.message);
+      toast.error('Đăng nhập thất bại', res.message);
     }
   };
 
@@ -132,12 +136,14 @@ export const AuthModal: React.FC = () => {
 
     if (res.success) {
       setSuccessMsg(res.message);
+      toast.success('✅ Đăng ký thành công!', `Tài khoản của bạn đã được tạo. Hãy bắt đầu luyện thi!`);
       setTimeout(() => {
         closeAuthModal();
         setSuccessMsg('');
-      }, 700);
+      }, 500);
     } else {
       setErrorMsg(res.message);
+      toast.error('Đăng ký thất bại', res.message);
     }
   };
 

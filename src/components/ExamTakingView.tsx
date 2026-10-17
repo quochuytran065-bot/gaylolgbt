@@ -711,39 +711,46 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
             </div>
 
             {/* Question Grid Buttons */}
-            <div className="grid grid-cols-5 gap-2 max-h-72 overflow-y-auto pr-1">
+            <div className="grid grid-cols-6 sm:grid-cols-5 gap-1.5 max-h-80 overflow-y-auto pr-1 hide-scrollbar">
               {exam.questions.map((q, idx) => {
                 const isAnswered = isQuestionAnswered(q);
                 const isCurrent = currentQuestionIndex === idx;
                 const isFlag = flaggedQuestions.includes(q.id);
+                const partColor = q.part === 'I' ? 'border-t-2 border-t-blue-400' :
+                                  q.part === 'II' ? 'border-t-2 border-t-amber-400' :
+                                  q.part === 'III' ? 'border-t-2 border-t-emerald-400' : '';
 
                 return (
                   <button
                     key={q.id}
                     onClick={() => setCurrentQuestionIndex(idx)}
-                    className={`relative h-10 rounded-lg font-mono text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
+                    title={`Câu ${idx + 1}${q.part ? ` • Phần ${q.part}` : ''}${isAnswered ? ' ✓ Đã trả lời' : ' • Chưa làm'}${isFlag ? ' 🚩 Đã gắn cờ' : ''}`}
+                    className={`relative h-9 rounded-lg font-mono text-xs font-bold transition-all flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 ${partColor} ${
                       isCurrent
-                        ? 'ring-2 ring-sky-600 ring-offset-1 dark:ring-offset-slate-900'
+                        ? 'ring-2 ring-sky-600 ring-offset-1 dark:ring-offset-slate-900 shadow-md'
                         : ''
                     } ${
                       isAnswered
-                        ? 'bg-sky-700 text-white shadow-2xs hover:bg-sky-800'
-                        : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        ? isFlag
+                          ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-400 dark:border-amber-600 shadow-xs'
+                          : 'bg-sky-600 dark:bg-sky-700 text-white shadow-xs hover:bg-sky-700 dark:hover:bg-sky-600'
+                        : isFlag
+                          ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700'
+                          : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/30'
                     }`}
                   >
                     <span>{idx + 1}</span>
-                    {q.part && (
-                      <span className="absolute -top-1 -left-1 text-[8px] px-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-sm font-sans font-semibold">
-                        {q.part}
-                      </span>
-                    )}
                     {isFlag && (
-                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border border-white dark:border-slate-900" />
+                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border border-white dark:border-slate-900 shadow-xs" />
+                    )}
+                    {isAnswered && !isFlag && (
+                      <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-white dark:border-slate-700" />
                     )}
                   </button>
                 );
               })}
             </div>
+
 
             {/* Quick summary stats */}
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 space-y-1">

@@ -21,7 +21,8 @@ import {
   BookMarked,
   Headphones,
   MessageSquare,
-  GraduationCap
+  GraduationCap,
+  Trophy
 } from 'lucide-react';
 
 export type AppTab = 
@@ -36,6 +37,7 @@ export type AppTab =
   | 'documents' 
   | 'analytics' 
   | 'history'
+  | 'leaderboard'
   | 'admin';
 
 interface NavbarProps {
@@ -60,7 +62,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUtilityMenuOpen, setIsUtilityMenuOpen] = useState(false);
 
-  const isUtilityActive = ['notebook', 'focus', 'community', 'analytics'].includes(activeTab);
+  const isUtilityActive = ['notebook', 'focus', 'community', 'analytics', 'leaderboard'].includes(activeTab);
 
   return (
     <header className={`sticky top-0 z-40 border-b transition-colors duration-300 ev-glass ${
@@ -184,7 +186,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {activeTab === 'notebook' ? 'Sổ tay' :
                    activeTab === 'focus' ? 'Phòng học' :
                    activeTab === 'community' ? 'Hỏi đáp' :
-                   activeTab === 'analytics' ? 'Mục tiêu Aim' : 'Tiện ích'}
+                   activeTab === 'analytics' ? 'Mục tiêu Aim' :
+                   activeTab === 'leaderboard' ? 'Bảng xếp hạng' : 'Tiện ích'}
                 </span>
                 <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isUtilityMenuOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -263,10 +266,28 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <p className="text-[10px] text-slate-400">Lộ trình & phân tích điểm</p>
                     </div>
                   </button>
+
+                  <button
+                    onClick={() => { setActiveTab('leaderboard'); setIsUtilityMenuOpen(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors text-left cursor-pointer ${
+                      activeTab === 'leaderboard'
+                        ? isDarkMode ? 'bg-amber-950/70 text-amber-300 font-bold' : 'bg-amber-50 text-amber-800 font-bold'
+                        : isDarkMode ? 'text-slate-300 hover:bg-slate-700/60' : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                      <Trophy className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold leading-tight">Bảng xếp hạng</p>
+                      <p className="text-[10px] text-slate-400">Top học sinh xuất sắc</p>
+                    </div>
+                  </button>
                 </div>
               )}
             </div>
           </nav>
+
 
           {/* Zone 3: Dark mode toggle + user actions */}
           <div className="hidden md:flex items-center gap-2">
@@ -606,6 +627,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Mục tiêu & Lộ trình cá nhân hóa</span>
             </span>
             <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-full bg-amber-500 text-white">Aim</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab('leaderboard'); setIsMobileMenuOpen(false); }}
+            className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-xl ${
+              activeTab === 'leaderboard' ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold' : 'text-slate-700 dark:text-slate-300'
+            }`}
+          >
+            <span className="flex items-center gap-1.5">
+              <Trophy className="w-3.5 h-3.5 text-amber-500" />
+              <span>Bảng xếp hạng (Top học sinh)</span>
+            </span>
+            <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-full bg-amber-500 text-white">Top</span>
           </button>
           <button
             onClick={() => {

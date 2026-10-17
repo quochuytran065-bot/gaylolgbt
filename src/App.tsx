@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider, useToast } from './context/ToastContext';
 import { Navbar, AppTab } from './components/Navbar';
 import { HomeView } from './components/HomeView';
 import { DocumentList } from './components/DocumentList';
@@ -18,6 +19,8 @@ import { UserHistoryModal } from './components/UserHistoryModal';
 import { AuthModal } from './components/AuthModal';
 import { AdminPanelModal } from './components/AdminPanelModal';
 import { AdminDashboardView } from './components/AdminDashboardView';
+import { LeaderboardView } from './components/LeaderboardView';
+import { AIChatbotWidget } from './components/AIChatbotWidget';
 import { Footer } from './components/Footer';
 import { DocumentItem, Exam, ExamResult, Question, StudyGoal, Subject, GradeLevel } from './types';
 import { DEFAULT_STUDY_GOAL, INITIAL_DOCUMENTS, INITIAL_EXAMS } from './data/mockData';
@@ -25,6 +28,7 @@ import { generateUniqueBGDExam } from './services/bgdExamGenerator';
 
 function MainApp() {
   const { saveExamResult, getResultsForExam, currentUser } = useAuth();
+  const toast = useToast();
 
   // Dark mode state — persisted in localStorage, applied to <html>
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
@@ -139,6 +143,17 @@ function MainApp() {
     setActiveResult(result);
     setActiveExam(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Show score-based toast notification
+    const pct = Math.round((result.totalScore / result.maxScore) * 100);
+    if (pct >= 90) {
+      toast.achievement('🏆 Xuất sắc!', `Điểm ${result.totalScore.toFixed(2)}/${result.maxScore} — Top học sinh!`);
+    } else if (pct >= 70) {
+      toast.success('✅ Hoàn thành bài thi!', `Điểm ${result.totalScore.toFixed(2)}/${result.maxScore} — Tốt lắm!`);
+    } else if (pct >= 50) {
+      toast.info('📊 Kết quả bài thi', `Điểm ${result.totalScore.toFixed(2)}/${result.maxScore} — Cần ôn luyện thêm.`);
+    } else {
+      toast.warning('📚 Cần cố gắng hơn', `Điểm ${result.totalScore.toFixed(2)}/${result.maxScore} — Hãy làm bài chữa!`);
+    }
   };
 
   const handleCancelExam = () => {
@@ -319,6 +334,10 @@ function MainApp() {
               />
             )}
 
+            {activeTab === 'leaderboard' && (
+              <LeaderboardView />
+            )}
+
             {activeTab === 'admin' && (
               <AdminDashboardView
                 exams={exams}
@@ -365,6 +384,7 @@ function MainApp() {
       />
 
       <AuthModal />
+      <AIChatbotWidget />
 
       {/* Footer */}
       <Footer onSelectTab={(tab) => {
@@ -380,7 +400,9 @@ function MainApp() {
 export default function App() {
   return (
     <AuthProvider>
-      <MainApp />
+      <ToastProvider>
+        <MainApp />
+      </ToastProvider>
     </AuthProvider>
   );
 }
