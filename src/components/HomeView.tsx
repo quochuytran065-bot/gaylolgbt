@@ -192,26 +192,27 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 onClick={() => onSelectTab('exams')}
-                className="px-6 py-3.5 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-500 hover:to-sky-400 text-white font-semibold text-sm rounded-xl shadow-lg flex items-center gap-2 transition-all cursor-pointer hover:shadow-sky-500/25 active:scale-95"
+                className="px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-600/30 flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
               >
                 <Play className="w-4 h-4 fill-white" />
                 <span>Làm bài kiểm tra ngay</span>
               </button>
 
               <button
-                onClick={() => onSelectTab('focus')}
-                className="px-5 py-3.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-semibold text-sm rounded-xl shadow-lg flex items-center gap-2 transition-all cursor-pointer hover:shadow-teal-500/25 active:scale-95"
+                onClick={() => onSelectTab('courses')}
+                className="px-5 py-3.5 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-white font-bold text-sm rounded-xl shadow-lg shadow-amber-500/25 flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
               >
-                <Headphones className="w-4 h-4" />
-                <span>Phòng tự học chung</span>
+                <Flame className="w-4 h-4 fill-amber-200 text-amber-200" />
+                <span>Đề cương 9+ Vận dụng cao</span>
+                <span className="px-1.5 py-0.2 bg-white text-rose-600 text-[9px] font-black rounded">HOT</span>
               </button>
 
               <button
-                onClick={() => onSelectTab('analytics')}
-                className="px-5 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold text-sm rounded-xl shadow-lg flex items-center gap-2 transition-all cursor-pointer hover:shadow-amber-500/25 active:scale-95"
+                onClick={() => onSelectTab('leaderboard')}
+                className="px-4 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-sm rounded-xl backdrop-blur-md flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
               >
-                <Target className="w-4 h-4" />
-                <span>Mục tiêu Aim 9.0+</span>
+                <Award className="w-4 h-4 text-amber-400" />
+                <span>Bảng xếp hạng</span>
               </button>
             </div>
 

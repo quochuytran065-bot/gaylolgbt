@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { Navbar, AppTab } from './components/Navbar';
@@ -8,20 +8,29 @@ import { DocumentViewerModal } from './components/DocumentViewerModal';
 import { ExamList } from './components/ExamList';
 import { ExamTakingView } from './components/ExamTakingView';
 import { ExamResultView } from './components/ExamResultView';
-import { AnalyticsAimDashboard } from './components/AnalyticsAimDashboard';
-import { DGNLHubView } from './components/DGNLHubView';
-import { CoursesView } from './components/CoursesView';
-import { GamificationArenaView } from './components/GamificationArenaView';
-import { SmartNotebookView } from './components/SmartNotebookView';
-import { FocusStudyRoomView } from './components/FocusStudyRoomView';
-import { CommunityForumView } from './components/CommunityForumView';
 import { UserHistoryModal } from './components/UserHistoryModal';
 import { AuthModal } from './components/AuthModal';
 import { AdminPanelModal } from './components/AdminPanelModal';
-import { AdminDashboardView } from './components/AdminDashboardView';
-import { LeaderboardView } from './components/LeaderboardView';
 import { AIChatbotWidget } from './components/AIChatbotWidget';
 import { Footer } from './components/Footer';
+
+// Code-split heavier views to dramatically accelerate initial page load (FCP)
+const AnalyticsAimDashboard = lazy(() => import('./components/AnalyticsAimDashboard').then(m => ({ default: m.AnalyticsAimDashboard })));
+const DGNLHubView = lazy(() => import('./components/DGNLHubView').then(m => ({ default: m.DGNLHubView })));
+const AdvancedStudyView = lazy(() => import('./components/AdvancedStudyView').then(m => ({ default: m.AdvancedStudyView })));
+const GamificationArenaView = lazy(() => import('./components/GamificationArenaView').then(m => ({ default: m.GamificationArenaView })));
+const SmartNotebookView = lazy(() => import('./components/SmartNotebookView').then(m => ({ default: m.SmartNotebookView })));
+const FocusStudyRoomView = lazy(() => import('./components/FocusStudyRoomView').then(m => ({ default: m.FocusStudyRoomView })));
+const CommunityForumView = lazy(() => import('./components/CommunityForumView').then(m => ({ default: m.CommunityForumView })));
+const AdminDashboardView = lazy(() => import('./components/AdminDashboardView').then(m => ({ default: m.AdminDashboardView })));
+const LeaderboardView = lazy(() => import('./components/LeaderboardView').then(m => ({ default: m.LeaderboardView })));
+
+const LoadingView: React.FC = () => (
+  <div className="flex flex-col items-center justify-center py-24 space-y-4">
+    <div className="w-10 h-10 border-4 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
+    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Đang tải dữ liệu TEST360...</p>
+  </div>
+);
 import { DocumentItem, Exam, ExamResult, Question, StudyGoal, Subject, GradeLevel } from './types';
 import { DEFAULT_STUDY_GOAL, INITIAL_DOCUMENTS, INITIAL_EXAMS } from './data/mockData';
 import { generateUniqueBGDExam } from './services/bgdExamGenerator';
@@ -261,37 +270,6 @@ function MainApp() {
               />
             )}
 
-            {activeTab === 'dgnl' && (
-              <DGNLHubView
-                onTakeExam={handleStartExam}
-                onSelectDocument={(doc) => setSelectedDocument(doc)}
-              />
-            )}
-
-            {activeTab === 'courses' && (
-              <CoursesView currentUserName={currentUser?.name} />
-            )}
-
-            {activeTab === 'arena' && (
-              <GamificationArenaView currentUserName={currentUser?.name} />
-            )}
-
-            {activeTab === 'notebook' && (
-              <SmartNotebookView
-                onStartPracticeWithEntry={() => {
-                  setActiveTab('exams');
-                }}
-              />
-            )}
-
-            {activeTab === 'focus' && (
-              <FocusStudyRoomView />
-            )}
-
-            {activeTab === 'community' && (
-              <CommunityForumView currentUserName={currentUser?.name} />
-            )}
-
             {activeTab === 'documents' && (
               <div className="space-y-6 pb-12">
                 <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -320,40 +298,79 @@ function MainApp() {
               </div>
             )}
 
-            {activeTab === 'analytics' && (
-              <AnalyticsAimDashboard
-                exams={exams}
-                onStartExam={handleStartExam}
-                onSelectTab={setActiveTab}
-                studyGoal={studyGoal}
-                onUpdateGoal={handleUpdateGoal}
-                onViewResult={(res) => {
-                  setActiveResult(res);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              />
-            )}
+            <Suspense fallback={<LoadingView />}>
+              {activeTab === 'dgnl' && (
+                <DGNLHubView
+                  onTakeExam={handleStartExam}
+                  onSelectDocument={(doc) => setSelectedDocument(doc)}
+                />
+              )}
 
-            {activeTab === 'leaderboard' && (
-              <LeaderboardView />
-            )}
+              {activeTab === 'courses' && (
+                <AdvancedStudyView
+                  onStartExamWithSubject={(sub) => {
+                    const match = exams.find(e => e.subject === sub) || exams[0];
+                    if (match) handleStartExam(match);
+                  }}
+                  onOpenDocumentViewer={(doc) => setSelectedDocument(doc)}
+                />
+              )}
 
-            {activeTab === 'admin' && (
-              <AdminDashboardView
-                exams={exams}
-                documents={documents}
-                studyGoal={studyGoal}
-                onUpdateGoal={handleUpdateGoal}
-                onAddExam={handleAddExam}
-                onDeleteExam={handleDeleteExam}
-                onAddDocument={handleAddDocument}
-                onDeleteDocument={handleDeleteDocument}
-                onBackToUserView={() => {
-                  setActiveTab('home');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              />
-            )}
+              {activeTab === 'arena' && (
+                <GamificationArenaView currentUserName={currentUser?.name} />
+              )}
+
+              {activeTab === 'notebook' && (
+                <SmartNotebookView
+                  onStartPracticeWithEntry={() => {
+                    setActiveTab('exams');
+                  }}
+                />
+              )}
+
+              {activeTab === 'focus' && (
+                <FocusStudyRoomView />
+              )}
+
+              {activeTab === 'community' && (
+                <CommunityForumView currentUserName={currentUser?.name} />
+              )}
+
+              {activeTab === 'analytics' && (
+                <AnalyticsAimDashboard
+                  exams={exams}
+                  onStartExam={handleStartExam}
+                  onSelectTab={setActiveTab}
+                  studyGoal={studyGoal}
+                  onUpdateGoal={handleUpdateGoal}
+                  onViewResult={(res) => {
+                    setActiveResult(res);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              )}
+
+              {activeTab === 'leaderboard' && (
+                <LeaderboardView />
+              )}
+
+              {activeTab === 'admin' && (
+                <AdminDashboardView
+                  exams={exams}
+                  documents={documents}
+                  studyGoal={studyGoal}
+                  onUpdateGoal={handleUpdateGoal}
+                  onAddExam={handleAddExam}
+                  onDeleteExam={handleDeleteExam}
+                  onAddDocument={handleAddDocument}
+                  onDeleteDocument={handleDeleteDocument}
+                  onBackToUserView={() => {
+                    setActiveTab('home');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              )}
+            </Suspense>
           </>
         )}
       </main>

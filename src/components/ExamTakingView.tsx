@@ -17,6 +17,7 @@ import {
   FileCheck,
   Calculator
 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 import { CasioCalculator } from './CasioCalculator';
 
 interface ExamTakingViewProps {
@@ -31,6 +32,7 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
   onCancelExam 
 }) => {
   const { currentUser } = useAuth();
+  const toast = useToast();
   
   // Total duration in seconds
   const totalSeconds = exam.durationMinutes * 60;
@@ -46,6 +48,8 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState<boolean>(false);
   const [isTimeUpAlert, setIsTimeUpAlert] = useState<boolean>(false);
   const [isCalcOpen, setIsCalcOpen] = useState<boolean>(false);
+  const [isMobilePaletteOpen, setIsMobilePaletteOpen] = useState<boolean>(false);
+  const [paletteFilter, setPaletteFilter] = useState<'all' | 'unanswered' | 'flagged'>('all');
 
   // Auto scroll top when changing question
   useEffect(() => {
@@ -312,9 +316,13 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
   }, [currentQuestionIndex, exam.questions, isSubmitModalOpen, isTimeUpAlert]);
 
   const toggleFlag = (qId: number) => {
-    setFlaggedQuestions(prev => 
-      prev.includes(qId) ? prev.filter(id => id !== qId) : [...prev, qId]
-    );
+    setFlaggedQuestions(prev => {
+      const willFlag = !prev.includes(qId);
+      if (willFlag) {
+        toast.info(`🚩 Đã gắn cờ câu ${currentQuestionIndex + 1}`, 'Bạn có thể lọc xem lại trước khi nộp bài');
+      }
+      return willFlag ? [...prev, qId] : prev.filter(id => id !== qId);
+    });
   };
 
   const selectOption = (optKey: ChoiceKey) => {
@@ -710,9 +718,53 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
               </div>
             </div>
 
+            {/* Filter tabs */}
+            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-[11px] font-semibold">
+              <button
+                type="button"
+                onClick={() => setPaletteFilter('all')}
+                className={`flex-1 py-1 rounded-lg transition-all cursor-pointer ${
+                  paletteFilter === 'all'
+                    ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-2xs font-bold'
+                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                Tất cả ({exam.questions.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaletteFilter('unanswered')}
+                className={`flex-1 py-1 rounded-lg transition-all cursor-pointer ${
+                  paletteFilter === 'unanswered'
+                    ? 'bg-white dark:bg-slate-700 text-amber-700 dark:text-amber-300 shadow-2xs font-bold'
+                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                Chưa làm ({remainingCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaletteFilter('flagged')}
+                className={`flex-1 py-1 rounded-lg transition-all cursor-pointer ${
+                  paletteFilter === 'flagged'
+                    ? 'bg-white dark:bg-slate-700 text-rose-700 dark:text-rose-300 shadow-2xs font-bold'
+                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                Gắn cờ ({flaggedQuestions.length})
+              </button>
+            </div>
+
             {/* Question Grid Buttons */}
             <div className="grid grid-cols-6 sm:grid-cols-5 gap-1.5 max-h-80 overflow-y-auto pr-1 hide-scrollbar">
-              {exam.questions.map((q, idx) => {
+              {exam.questions
+                .map((q, idx) => ({ q, idx }))
+                .filter(({ q }) => {
+                  if (paletteFilter === 'unanswered') return !isQuestionAnswered(q);
+                  if (paletteFilter === 'flagged') return flaggedQuestions.includes(q.id);
+                  return true;
+                })
+                .map(({ q, idx }) => {
                 const isAnswered = isQuestionAnswered(q);
                 const isCurrent = currentQuestionIndex === idx;
                 const isFlag = flaggedQuestions.includes(q.id);
@@ -879,6 +931,154 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
               </p>
             </div>
             <div className="w-8 h-8 border-3 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Sticky Question Grid Drawer Toggle Button */}
+      <div className="lg:hidden fixed bottom-4 left-4 right-4 z-40 flex items-center gap-2">
+        <button
+          onClick={() => setIsMobilePaletteOpen(true)}
+          className="flex-1 py-3 px-4 bg-slate-900/90 dark:bg-slate-800/95 backdrop-blur-md text-white rounded-2xl shadow-xl border border-white/20 flex items-center justify-between font-bold text-xs active:scale-95 transition-all cursor-pointer"
+        >
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>📋 Bảng câu hỏi</span>
+          </span>
+          <span className="font-mono bg-white/20 px-2 py-0.5 rounded-lg text-emerald-300">
+            {answeredCount}/{exam.questions.length} đã làm
+          </span>
+        </button>
+
+        <button
+          onClick={() => setIsSubmitModalOpen(true)}
+          className="py-3 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-2xl shadow-lg flex items-center gap-1.5 active:scale-95 cursor-pointer"
+        >
+          <Send className="w-4 h-4" />
+          <span>Nộp</span>
+        </button>
+      </div>
+
+      {/* Mobile Question Palette Bottom Sheet Drawer */}
+      {isMobilePaletteOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end bg-slate-900/70 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl max-h-[82vh] flex flex-col shadow-2xl p-5 space-y-4">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-sky-600"></span>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-heading">
+                  Bảng danh sách câu hỏi
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsMobilePaletteOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Filter pills */}
+            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-[11px] font-semibold shrink-0">
+              <button
+                type="button"
+                onClick={() => setPaletteFilter('all')}
+                className={`flex-1 py-1 rounded-lg transition-all cursor-pointer ${
+                  paletteFilter === 'all'
+                    ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-2xs font-bold'
+                    : 'text-slate-500'
+                }`}
+              >
+                Tất cả ({exam.questions.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaletteFilter('unanswered')}
+                className={`flex-1 py-1 rounded-lg transition-all cursor-pointer ${
+                  paletteFilter === 'unanswered'
+                    ? 'bg-white dark:bg-slate-700 text-amber-700 dark:text-amber-300 shadow-2xs font-bold'
+                    : 'text-slate-500'
+                }`}
+              >
+                Chưa làm ({remainingCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaletteFilter('flagged')}
+                className={`flex-1 py-1 rounded-lg transition-all cursor-pointer ${
+                  paletteFilter === 'flagged'
+                    ? 'bg-white dark:bg-slate-700 text-rose-700 dark:text-rose-300 shadow-2xs font-bold'
+                    : 'text-slate-500'
+                }`}
+              >
+                Gắn cờ ({flaggedQuestions.length})
+              </button>
+            </div>
+
+            {/* Question Grid Buttons */}
+            <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 overflow-y-auto max-h-[50vh] p-1 hide-scrollbar">
+              {exam.questions
+                .map((q, idx) => ({ q, idx }))
+                .filter(({ q }) => {
+                  if (paletteFilter === 'unanswered') return !isQuestionAnswered(q);
+                  if (paletteFilter === 'flagged') return flaggedQuestions.includes(q.id);
+                  return true;
+                })
+                .map(({ q, idx }) => {
+                const isAnswered = isQuestionAnswered(q);
+                const isCurrent = currentQuestionIndex === idx;
+                const isFlag = flaggedQuestions.includes(q.id);
+                const partColor = q.part === 'I' ? 'border-t-2 border-t-blue-400' :
+                                  q.part === 'II' ? 'border-t-2 border-t-amber-400' :
+                                  q.part === 'III' ? 'border-t-2 border-t-emerald-400' : '';
+
+                return (
+                  <button
+                    key={q.id}
+                    onClick={() => {
+                      setCurrentQuestionIndex(idx);
+                      setIsMobilePaletteOpen(false);
+                    }}
+                    className={`relative h-11 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center cursor-pointer active:scale-95 ${partColor} ${
+                      isCurrent
+                        ? 'ring-2 ring-sky-600 ring-offset-2 dark:ring-offset-slate-900 shadow-md font-black'
+                        : ''
+                    } ${
+                      isAnswered
+                        ? isFlag
+                          ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-400 dark:border-amber-600 shadow-xs'
+                          : 'bg-sky-600 dark:bg-sky-700 text-white shadow-xs'
+                        : isFlag
+                          ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700'
+                          : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
+                    }`}
+                  >
+                    <span>{idx + 1}</span>
+                    {isFlag && (
+                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border border-white dark:border-slate-900 shadow-xs" />
+                    )}
+                    {isAnswered && !isFlag && (
+                      <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-white dark:border-slate-700" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 shrink-0">
+              <span>Đã làm: <strong className="text-slate-900 dark:text-slate-100">{answeredCount}/{exam.questions.length}</strong></span>
+              <button
+                onClick={() => {
+                  setIsMobilePaletteOpen(false);
+                  setIsSubmitModalOpen(true);
+                }}
+                className="px-4 py-2 bg-emerald-600 text-white font-bold rounded-xl active:scale-95"
+              >
+                Nộp bài ngay
+              </button>
+            </div>
+
           </div>
         </div>
       )}

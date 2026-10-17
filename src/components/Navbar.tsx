@@ -138,12 +138,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('courses')}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'courses'
-                  ? isDarkMode ? 'bg-purple-600 text-white shadow-xs' : 'bg-white text-purple-700 shadow-xs'
+                  ? isDarkMode ? 'bg-amber-600 text-white shadow-xs' : 'bg-white text-amber-700 shadow-xs'
                   : isDarkMode ? 'text-slate-300 hover:text-white hover:bg-slate-700/60' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
-              <PlayCircle className="w-3.5 h-3.5 text-purple-500" />
-              <span>Khóa học</span>
+              <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+              <span>Chuyên đề 9+</span>
+              <span className="px-1 py-0.2 rounded bg-rose-500 text-white font-extrabold text-[8px] uppercase tracking-tighter">
+                VIP
+              </span>
             </button>
 
             <button
@@ -542,10 +545,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile nav drawer */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 pt-3 pb-5 space-y-1 text-xs font-semibold">
+        <div className="md:hidden border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 pt-3 pb-6 space-y-1 text-xs font-semibold max-h-[82vh] overflow-y-auto overscroll-contain shadow-xl">
           <button
             onClick={() => { setActiveTab('home'); setIsMobileMenuOpen(false); }}
-            className={`block w-full text-left px-3 py-2 rounded-xl ${
+            className={`block w-full text-left px-3 py-2.5 rounded-xl ${
               activeTab === 'home' ? 'bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 font-bold' : 'text-slate-700 dark:text-slate-300'
             }`}
           >
@@ -553,7 +556,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
           <button
             onClick={() => { setActiveTab('exams'); setIsMobileMenuOpen(false); }}
-            className={`block w-full text-left px-3 py-2 rounded-xl ${
+            className={`block w-full text-left px-3 py-2.5 rounded-xl ${
               activeTab === 'exams' ? 'bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 font-bold' : 'text-slate-700 dark:text-slate-300'
             }`}
           >
@@ -561,7 +564,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
           <button
             onClick={() => { setActiveTab('dgnl'); setIsMobileMenuOpen(false); }}
-            className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-xl ${
+            className={`flex items-center justify-between w-full text-left px-3 py-2.5 rounded-xl ${
               activeTab === 'dgnl' ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold' : 'text-slate-700 dark:text-slate-300'
             }`}
           >
@@ -570,11 +573,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
           <button
             onClick={() => { setActiveTab('courses'); setIsMobileMenuOpen(false); }}
-            className={`block w-full text-left px-3 py-2 rounded-xl ${
-              activeTab === 'courses' ? 'bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold' : 'text-slate-700 dark:text-slate-300'
+            className={`flex items-center justify-between w-full text-left px-3 py-2.5 rounded-xl ${
+              activeTab === 'courses' ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold' : 'text-slate-700 dark:text-slate-300'
             }`}
           >
-            🎓 Khóa học trực tuyến (Video LMS)
+            <span className="flex items-center gap-1.5">
+              <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
+              <span>Chuyên đề & Đề cương 9+ (Vận dụng cao)</span>
+            </span>
+            <span className="px-1.5 py-0.2 text-[9px] font-bold rounded bg-rose-500 text-white">VIP 9+</span>
           </button>
           <button
             onClick={() => { setActiveTab('arena'); setIsMobileMenuOpen(false); }}

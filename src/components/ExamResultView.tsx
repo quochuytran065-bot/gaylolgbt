@@ -24,7 +24,8 @@ import {
   FileCheck,
   Zap,
   BookmarkPlus,
-  BookmarkCheck
+  BookmarkCheck,
+  Printer
 } from 'lucide-react';
 
 interface ExamResultViewProps {
@@ -187,7 +188,8 @@ export const ExamResultView: React.FC<ExamResultViewProps> = ({
     <div className="max-w-4xl mx-auto space-y-8 pb-16">
       
       {/* Back Button */}
-      <div>
+      {/* Top action row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print">
         <button
           onClick={onBackToList}
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors cursor-pointer"
@@ -195,6 +197,35 @@ export const ExamResultView: React.FC<ExamResultViewProps> = ({
           <ArrowLeft className="w-4 h-4" />
           <span>Quay lại danh sách bài kiểm tra</span>
         </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.print()}
+            className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95 border border-slate-700"
+            title="In trực tiếp hoặc Lưu file PDF phiếu điểm"
+          >
+            <Printer className="w-4 h-4 text-sky-400" />
+            <span>In / Xuất PDF Phiếu Điểm</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Official Institutional Report Card Header (Print Only) */}
+      <div className="print-only hidden p-6 text-center border-b-2 border-slate-900 mb-6 font-sans">
+        <p className="text-[11px] uppercase font-bold tracking-widest text-slate-700">
+          BỘ GIÁO DỤC VÀ ĐÀO TẠO · HỆ THỐNG KHẢO THÍ TRỰC TUYẾN TEST360 LMS
+        </p>
+        <h1 className="text-xl font-black uppercase mt-2 text-slate-900">
+          PHIẾU BÁO ĐIỂM & ĐÁNH GIÁ NĂNG LỰC THI THỬ THPT
+        </h1>
+        <p className="text-xs text-slate-600 mt-1">
+          Bài thi: <strong>{result.examTitle}</strong> {result.examCode ? `· Mã đề: ${result.examCode}` : ''} · Ngày nộp: {result.submittedAt}
+        </p>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-xs border-t border-b border-slate-300 py-2.5 text-left">
+          <div><strong>Thí sinh:</strong> {result.userName}</div>
+          <div><strong>Môn thi / Khối:</strong> {result.subject} ({result.grade})</div>
+          <div><strong>Điểm số:</strong> <span className="font-bold text-base">{result.score.toFixed(2)}/10</span> ({result.scorePercentage}%)</div>
+        </div>
       </div>
 
       {/* Main Score & Summary Card */}
