@@ -69,7 +69,7 @@ export const AIChatbotWidget: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const apiKey = (typeof localStorage !== 'undefined' ? localStorage.getItem('eduviet_gemini_api_key') : '') || import.meta.env.VITE_GEMINI_API_KEY || '';
       let reply: string;
 
       if (apiKey) {
