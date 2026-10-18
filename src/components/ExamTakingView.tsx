@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { CasioCalculator } from './CasioCalculator';
+import { MathView } from './MathView';
 
 interface ExamTakingViewProps {
   exam: Exam;
@@ -678,9 +679,20 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
               </button>
             </div>
 
+            {/* Passage for Reading Clusters / Thí nghiệm ĐGNL */}
+            {currentQuestion.passage && (
+              <div className="p-4 sm:p-5 bg-sky-50/80 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 rounded-2xl space-y-2 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed shadow-2xs">
+                <div className="flex items-center gap-1.5 font-bold text-sky-800 dark:text-sky-300 uppercase tracking-wider text-[11px]">
+                  <BookMarked className="w-3.5 h-3.5 text-sky-600" />
+                  <span>Ngữ Liệu Khoa Học / Thí Nghiệm Đọc Hiểu:</span>
+                </div>
+                <MathView text={currentQuestion.passage} />
+              </div>
+            )}
+
             {/* Question Text */}
             <div className="text-base sm:text-lg font-medium text-slate-900 dark:text-slate-100 leading-relaxed">
-              {currentQuestion.text}
+              <MathView text={currentQuestion.text} />
             </div>
 
             {/* CASE 1: PART I - Multiple Choice (A, B, C, D) */}
@@ -735,7 +747,7 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                             {option.key}
                           </div>
                           <div className={`text-sm sm:text-base font-normal pt-0.5 leading-snug flex-1 ${isEliminated ? 'line-through text-slate-400' : ''}`}>
-                            {option.label}
+                            <MathView text={option.label} inline />
                           </div>
                         </button>
 
@@ -789,9 +801,9 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                           <span className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold font-mono text-xs flex items-center justify-center shrink-0">
                             {item.id})
                           </span>
-                          <span className="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-snug pt-0.5">
-                            {item.text}
-                          </span>
+                          <div className="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-snug pt-0.5 flex-1">
+                            <MathView text={item.text} />
+                          </div>
                         </div>
 
                         {/* True / False Toggle Buttons */}

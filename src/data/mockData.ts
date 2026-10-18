@@ -3,6 +3,11 @@ import { ALL_BGD_EXAMS } from './bgdExamBank';
 import { ALL_AZOTA_GRADE12_EXAMS } from './azotaGrade12Bank';
 import { ALL_AZOTA_PHYSICS_2026_EXAMS } from './azotaPhysicsBank2026';
 import { ALL_VIETJACK_AZOTA_GRAND_EXAMS } from './vietjackAzotaGrandBank2026';
+import { 
+  VDC_MATH_QUESTIONS_2026, 
+  VDC_PHYSICS_QUESTIONS_2026, 
+  VDC_CHEMISTRY_QUESTIONS_2026 
+} from './massiveHighOrderBank2026';
 import heroImg from '../assets/images/hero_digital_learning_1790863793186.jpg';
 import stemImg from '../assets/images/cover_stem_study_1790863805933.jpg';
 import humanitiesImg from '../assets/images/cover_humanities_study_1790863821410.jpg';
@@ -363,7 +368,56 @@ export const INITIAL_DOCUMENTS: DocumentItem[] = [
   }
 ];
 
+export const VDC_GRAND_EXAMS_2026: Exam[] = [
+  {
+    id: 'exam-vdc-toan-2026',
+    examCode: 'VDC-TOAN-999',
+    title: 'Đề Vận Dụng Cao 9+ Môn Toán 12 — Chuyên KHTN & Lam Sơn 2026',
+    description: 'Bộ câu hỏi phân hóa đỉnh cao điểm 9-10: Cực trị tham số m, Tương giao hàm hợp trị tuyệt đối, Ứng dụng đạo hàm tối ưu chi phí thực tế, Hình học Oxyz và Xác suất Bayes chuẩn quy chế mới.',
+    subject: 'Toán học',
+    grade: 'Lớp 12',
+    durationMinutes: 90,
+    difficulty: 'Chuyên Đề 9+ VDC',
+    isBGDFormat: true,
+    author: 'Tổ Toán Khảo Thí THPT 2026',
+    attemptsCount: 8940,
+    averageScore: 6.8,
+    questions: VDC_MATH_QUESTIONS_2026
+  },
+  {
+    id: 'exam-vdc-ly-2026',
+    examCode: 'VDC-LY-888',
+    title: 'Đề Vận Dụng Cao 9+ Môn Vật Lí 12 — Chuyên Sư Phạm & Amsterdam 2026',
+    description: 'Chuyên đề Vật lí 12 nâng cao: Cân bằng nhiệt động hai ngăn pit-tông mỏng, Suất điện động thanh quay trong từ trường, Cân bằng nhiệt chuyển thể đa giai đoạn, Tiêu thụ nhiên liệu hạt nhân lò phản ứng.',
+    subject: 'Vật lý',
+    grade: 'Lớp 12',
+    durationMinutes: 50,
+    difficulty: 'Chuyên Đề 9+ VDC',
+    isBGDFormat: true,
+    author: 'Tổ Vật Lí Khảo Thí THPT 2026',
+    attemptsCount: 7650,
+    averageScore: 6.5,
+    questions: VDC_PHYSICS_QUESTIONS_2026
+  },
+  {
+    id: 'exam-vdc-hoa-2026',
+    examCode: 'VDC-HOA-777',
+    title: 'Đề Vận Dụng Cao 9+ Môn Hóa Học 12 — Chuyên Bắc Ninh & Moon.vn 2026',
+    description: 'Chuyên đề Hóa học 12 phân hóa: Thủy phân este 3 chức glixerol, Phức chất đồng và niken với thuyết Lewis, Điện phân dung dịch hai điện cực màng ngăn xốp, Pin Galvani và chuẩn độ oxi hóa khử.',
+    subject: 'Hóa học',
+    grade: 'Lớp 12',
+    durationMinutes: 50,
+    difficulty: 'Chuyên Đề 9+ VDC',
+    isBGDFormat: true,
+    author: 'Tổ Hóa Học Khảo Thí THPT 2026',
+    attemptsCount: 6820,
+    averageScore: 6.7,
+    questions: VDC_CHEMISTRY_QUESTIONS_2026
+  }
+];
+
 export const INITIAL_EXAMS: Exam[] = [
+  ...VDC_GRAND_EXAMS_2026,
   ...ALL_VIETJACK_AZOTA_GRAND_EXAMS,
   ...ALL_AZOTA_PHYSICS_2026_EXAMS,
   ...ALL_AZOTA_GRADE12_EXAMS,

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ExamResult, ChoiceKey, Question, Subject, GradeLevel, NotebookEntry } from '../types';
 import { INITIAL_NOTEBOOK_ENTRIES } from '../data/learningPlatformData';
+import { MathView } from './MathView';
 import { 
   Award, 
   CheckCircle2, 
@@ -787,9 +788,20 @@ export const ExamResultView: React.FC<ExamResultViewProps> = ({
                   </div>
                 </div>
 
+                {/* Passage for Reading Clusters / Thí nghiệm ĐGNL */}
+                {q.passage && (
+                  <div className="p-3.5 bg-sky-50/70 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-xl space-y-1.5 text-xs text-slate-800 dark:text-slate-200 leading-relaxed shadow-2xs">
+                    <div className="flex items-center gap-1.5 font-bold text-sky-800 dark:text-sky-300 uppercase tracking-wider text-[10px]">
+                      <BookOpen className="w-3.5 h-3.5 text-sky-600" />
+                      <span>Ngữ Liệu / Thí Nghiệm Đọc Hiểu:</span>
+                    </div>
+                    <MathView text={q.passage} />
+                  </div>
+                )}
+
                 {/* Question content */}
                 <div className="text-sm sm:text-base font-medium text-slate-900 dark:text-slate-100 leading-relaxed">
-                  {q.text}
+                  <MathView text={q.text} />
                 </div>
 
                 {/* CASE 1: Multiple choice review */}
@@ -821,7 +833,7 @@ export const ExamResultView: React.FC<ExamResultViewProps> = ({
                             {opt.key}
                           </span>
                           <span className="pt-0.5 leading-snug flex-1">
-                            {opt.label}
+                            <MathView text={opt.label} inline />
                           </span>
                           {isCorrectKey && (
                             <span className="text-emerald-700 dark:text-emerald-400 text-xs font-bold shrink-0 self-center">
@@ -863,9 +875,9 @@ export const ExamResultView: React.FC<ExamResultViewProps> = ({
                               <span className="font-mono font-bold text-slate-700 dark:text-slate-300 shrink-0">
                                 {item.id})
                               </span>
-                              <span className="text-slate-800 dark:text-slate-200 leading-snug">
-                                {item.text}
-                              </span>
+                              <div className="text-slate-800 dark:text-slate-200 leading-snug flex-1">
+                                <MathView text={item.text} />
+                              </div>
                             </div>
 
                             <div className="flex items-center gap-3 shrink-0 text-xs font-medium">
@@ -946,17 +958,17 @@ export const ExamResultView: React.FC<ExamResultViewProps> = ({
 
                       {/* Advice & Common Traps */}
                       {q.mistakeAdvice && (
-                        <p className="text-amber-800 dark:text-amber-300 flex items-start gap-1.5 pt-0.5">
+                        <div className="text-amber-800 dark:text-amber-300 flex items-start gap-1.5 pt-0.5">
                           <span className="font-bold shrink-0">💡 Lời khuyên & cạm bẫy:</span>
-                          <span>{q.mistakeAdvice}</span>
-                        </p>
+                          <span className="flex-1"><MathView text={q.mistakeAdvice} inline /></span>
+                        </div>
                       )}
 
                       {/* Key Formula */}
                       {q.keyFormula && (
                         <div className="mt-2 p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-amber-200/80 dark:border-amber-900/60 text-xs font-mono text-slate-800 dark:text-slate-200 flex items-start gap-2 shadow-2xs">
                           <span className="font-bold text-amber-800 dark:text-amber-400 shrink-0 font-sans">🔑 Công thức cốt lõi:</span>
-                          <span className="text-sky-900 dark:text-sky-300 font-semibold">{q.keyFormula}</span>
+                          <span className="text-sky-900 dark:text-sky-300 font-semibold flex-1"><MathView text={q.keyFormula} inline /></span>
                         </div>
                       )}
                     </div>
@@ -979,9 +991,9 @@ export const ExamResultView: React.FC<ExamResultViewProps> = ({
                         <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                         <span>Phương pháp & Lời giải:</span>
                       </p>
-                      <p className="whitespace-pre-line text-slate-800 dark:text-slate-200">
-                        {q.explanation}
-                      </p>
+                      <div className="text-slate-800 dark:text-slate-200 leading-relaxed">
+                        <MathView text={q.explanation || ''} />
+                      </div>
                     </div>
                   )}
                 </div>

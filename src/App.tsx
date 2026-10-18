@@ -119,16 +119,27 @@ function MainApp() {
   });
 
   const [exams, setExams] = useState<Exam[]>(() => {
+    const CURRENT_EXAM_BANK_VERSION = '2026_grand_bank_v5';
     try {
-      const saved = localStorage.getItem('eduviet_exams');
-      if (saved) return JSON.parse(saved) as Exam[];
+      const savedVersion = localStorage.getItem('eduviet_exams_version');
+      if (savedVersion === CURRENT_EXAM_BANK_VERSION) {
+        const saved = localStorage.getItem('eduviet_exams');
+        if (saved) return JSON.parse(saved) as Exam[];
+      }
+    } catch { /* noop */ }
+    try {
+      localStorage.setItem('eduviet_exams_version', CURRENT_EXAM_BANK_VERSION);
+      localStorage.setItem('eduviet_exams', JSON.stringify(INITIAL_EXAMS));
     } catch { /* noop */ }
     return INITIAL_EXAMS;
   });
 
   // Persist exams/documents to localStorage whenever they change
   useEffect(() => {
-    try { localStorage.setItem('eduviet_exams', JSON.stringify(exams)); } catch { /* noop */ }
+    try { 
+      localStorage.setItem('eduviet_exams', JSON.stringify(exams)); 
+      localStorage.setItem('eduviet_exams_version', '2026_grand_bank_v5');
+    } catch { /* noop */ }
   }, [exams]);
 
   useEffect(() => {

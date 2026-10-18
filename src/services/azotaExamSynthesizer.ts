@@ -23,6 +23,11 @@ import {
   SPECIALIZED_QUESTIONS_LY, 
   SPECIALIZED_QUESTIONS_HOA 
 } from '../data/specializedExamBank';
+import {
+  VDC_MATH_QUESTIONS_2026,
+  VDC_PHYSICS_QUESTIONS_2026,
+  VDC_CHEMISTRY_QUESTIONS_2026
+} from '../data/massiveHighOrderBank2026';
 
 // Fisher-Yates shuffle
 function shuffleArray<T>(array: T[]): T[] {
@@ -119,15 +124,18 @@ export function getAllQuestionsBySubject(subject: Subject | 'Tất cả' | 'Tổ
     }
   });
 
-  // Bổ sung ngân hàng chuyên sâu
+  // Bổ sung ngân hàng chuyên sâu & VDC 9+
   if (subject === 'Toán học' || subject === 'Tổ hợp A00' || subject === 'Tất cả') {
     questions.push(...SPECIALIZED_QUESTIONS_TOAN);
+    questions.push(...VDC_MATH_QUESTIONS_2026);
   }
   if (subject === 'Vật lý' || subject === 'Tổ hợp A00' || subject === 'Tất cả') {
     questions.push(...SPECIALIZED_QUESTIONS_LY);
+    questions.push(...VDC_PHYSICS_QUESTIONS_2026);
   }
   if (subject === 'Hóa học' || subject === 'Tổ hợp A00' || subject === 'Tất cả') {
     questions.push(...SPECIALIZED_QUESTIONS_HOA);
+    questions.push(...VDC_CHEMISTRY_QUESTIONS_2026);
   }
 
   // Khử trùng lặp theo ID và nội dung
@@ -196,10 +204,37 @@ export function autoSynthesizeAzotaExam(options: AutoSynthesizeOptions): Exam {
     difficultyName = 'Format Chuẩn BGD 2026';
   }
 
-  // Lấy ngẫu nhiên câu hỏi
-  const shuffledI = shuffleArray(partIPool).slice(0, Math.min(targetPartI, partIPool.length));
-  const shuffledII = shuffleArray(partIIPool).slice(0, Math.min(targetPartII, partIIPool.length));
-  const shuffledIII = shuffleArray(partIIIPool).slice(0, Math.min(targetPartIII, partIIIPool.length));
+  // Tránh trùng lặp câu hỏi giữa các lần sinh đề liên tiếp (Anti-repetition session cache)
+  let recentIds: number[] = [];
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const raw = window.sessionStorage.getItem('azota_recent_served_q_ids');
+      if (raw) recentIds = JSON.parse(raw);
+    }
+  } catch {}
+
+  const filterFresh = (poolList: Question[], targetCount: number): Question[] => {
+    const fresh = poolList.filter(q => !recentIds.includes(q.id));
+    if (fresh.length >= targetCount) {
+      return shuffleArray(fresh).slice(0, targetCount);
+    }
+    const combined = [...shuffleArray(fresh), ...shuffleArray(poolList.filter(q => recentIds.includes(q.id)))];
+    return combined.slice(0, Math.min(targetCount, poolList.length));
+  };
+
+  // Lấy ngẫu nhiên câu hỏi không trùng lặp
+  const shuffledI = filterFresh(partIPool, targetPartI);
+  const shuffledII = filterFresh(partIIPool, targetPartII);
+  const shuffledIII = filterFresh(partIIIPool, targetPartIII);
+
+  // Lưu các ID vừa chọn vào sessionStorage để lần sinh kế tiếp không bị trùng
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const chosenIds = [...shuffledI, ...shuffledII, ...shuffledIII].map(q => q.id);
+      const updatedRecent = Array.from(new Set([...chosenIds, ...recentIds])).slice(0, 100);
+      window.sessionStorage.setItem('azota_recent_served_q_ids', JSON.stringify(updatedRecent));
+    }
+  } catch {}
 
   // Gán lại STT và ID liên tục để không bị nhảy số
   let currentId = 900000;
