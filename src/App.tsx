@@ -295,6 +295,8 @@ function MainApp() {
                   exams={exams}
                   onStartExam={handleStartExam}
                   onViewPreviousResult={handleViewPreviousResult}
+                  initialTab="exams"
+                  onOpenDocumentViewer={(doc) => setSelectedDocument(doc)}
                 />
               </div>
             )}
@@ -308,13 +310,15 @@ function MainApp() {
               )}
 
               {activeTab === 'courses' && (
-                <AdvancedStudyView
-                  onStartExamWithSubject={(sub) => {
-                    const match = exams.find(e => e.subject === sub) || exams[0];
-                    if (match) handleStartExam(match);
-                  }}
-                  onOpenDocumentViewer={(doc) => setSelectedDocument(doc)}
-                />
+                <div className="space-y-6 pb-12">
+                  <ExamList
+                    exams={exams}
+                    onStartExam={handleStartExam}
+                    onViewPreviousResult={handleViewPreviousResult}
+                    initialTab="courses"
+                    onOpenDocumentViewer={(doc) => setSelectedDocument(doc)}
+                  />
+                </div>
               )}
 
               {activeTab === 'arena' && (

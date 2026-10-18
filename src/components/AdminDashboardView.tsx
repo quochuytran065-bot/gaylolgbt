@@ -1498,13 +1498,13 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                           </div>
 
                           <div className="text-[11px] font-mono text-slate-400">
-                            {q.subject} • Lớp 12
+                            {parsedResult.subject} • Lớp 12
                           </div>
                         </div>
 
                         {/* Question Content */}
                         <div className="py-3.5 text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
-                          {q.content}
+                          {q.text}
                         </div>
 
                         {/* Render Options for Part I */}
@@ -1539,27 +1539,27 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                         )}
 
                         {/* Render Sub-items for Part II */}
-                        {q.part === 'II' && q.subItems && (
+                        {q.part === 'II' && q.trueFalseItems && (
                           <div className="space-y-2 pt-1 pb-3">
-                            {q.subItems.map(item => (
+                            {q.trueFalseItems.map(item => (
                               <div
-                                key={item.key}
+                                key={item.id}
                                 className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 text-xs"
                               >
                                 <div className="flex items-center gap-2">
                                   <span className="font-bold text-slate-900 dark:text-white font-mono">
-                                    {item.key})
+                                    {item.id})
                                   </span>
                                   <span className="text-slate-800 dark:text-slate-200">
-                                    {item.statement}
+                                    {item.text}
                                   </span>
                                 </div>
                                 <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase shrink-0 ${
-                                  item.correctBool
+                                  item.correctAnswer
                                     ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                                     : 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
                                 }`}>
-                                  {item.correctBool ? '✓ ĐÚNG' : '✗ SAI'}
+                                  {item.correctAnswer ? '✓ ĐÚNG' : '✗ SAI'}
                                 </span>
                               </div>
                             ))}
@@ -1573,7 +1573,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                               Đáp số trả lời ngắn (chấm tự động):
                             </span>
                             <span className="px-3 py-1 rounded-lg bg-emerald-600 text-white font-mono font-black text-xs shadow-xs">
-                              {q.correctAnswerText || 'Chưa xác định'}
+                              {q.shortAnswerCorrect || 'Chưa xác định'}
                             </span>
                           </div>
                         )}

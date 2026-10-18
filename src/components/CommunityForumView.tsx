@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Filter,
   Search,
-  Bot,
   GraduationCap,
   HelpCircle,
   Clock,
@@ -96,26 +95,7 @@ export const CommunityForumView: React.FC<CommunityForumViewProps> = ({
     setReplyInputs(prev => ({ ...prev, [postId]: '' }));
   };
 
-  // AI Tutor instant response
-  const handleAskAITutor = (post: ForumPost) => {
-    const aiReply: ForumReply = {
-      id: `ai-rep-${Date.now()}`,
-      authorName: 'EduViet AI Gia Sư 24/7',
-      authorAvatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80',
-      authorRole: 'ai_tutor',
-      content: `[Phân tích tự động của AI Tutor cho câu hỏi môn ${post.subject}]:\n• Bản chất vấn đề: Câu hỏi này thuộc dạng bài trọng tâm thường xuất hiện trong đề thi tốt nghiệp THPT Quốc gia.\n• Hướng dẫn giải chi tiết: Bạn cần bám sát phương pháp quy nạp hoặc khai triển công thức cơ bản, chú ý kiểm tra điều kiện xác định và dấu của các hệ số.\n• Mẹo thi cử: Đừng quên kiểm tra lại kết quả bằng việc thay số đặc biệt hoặc máy tính cầm tay để tránh bẫy đề thi nhé!`,
-      createdAt: new Date().toISOString(),
-      likesCount: 12,
-    };
 
-    const updated = posts.map(p =>
-      p.id === post.id
-        ? { ...p, isSolved: true, repliesCount: p.repliesCount + 1, replies: [...p.replies, aiReply] }
-        : p
-    );
-
-    savePosts(updated);
-  };
 
   const handleCreatePost = (e: React.FormEvent) => {
     e.preventDefault();
@@ -264,14 +244,6 @@ export const CommunityForumView: React.FC<CommunityForumViewProps> = ({
                 >
                   <ThumbsUp className="w-3.5 h-3.5" />
                   <span>Hữu ích ({post.likesCount})</span>
-                </button>
-
-                <button
-                  onClick={() => handleAskAITutor(post)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold cursor-pointer transition-all shadow-xs"
-                >
-                  <Bot className="w-3.5 h-3.5" />
-                  <span>Nhờ AI Gia Sư Giải Ngay</span>
                 </button>
               </div>
 

@@ -313,43 +313,10 @@ export const ARENA_QUESTIONS: ArenaQuestion[] = [
 // ═════════════════════════════════════════════════════════════════════
 // 4. PHÒNG HỌC TẬP CHUNG (FOCUS STUDY ROOM & STUDY TOGETHER)
 // ═════════════════════════════════════════════════════════════════════
-export const INITIAL_FOCUS_PARTICIPANTS: FocusParticipant[] = [
-  {
-    id: 'f-1',
-    name: 'Hoàng Yến (Hà Nội)',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-    currentTask: 'Giải 50 câu Toán Chuyên Sư Phạm 2026',
-    focusMinutesToday: 135,
-    isCamOn: true,
-  },
-  {
-    id: 'f-2',
-    name: 'Đức Minh (TP.HCM)',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-    currentTask: 'Học 30 từ vựng Academic English',
-    focusMinutesToday: 90,
-    isCamOn: true,
-  },
-  {
-    id: 'f-3',
-    name: 'Phương Linh (Đà Nẵng)',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
-    currentTask: 'Ôn tập Este & Lipit Hóa 12',
-    focusMinutesToday: 180,
-    isCamOn: false,
-  },
-  {
-    id: 'f-4',
-    name: 'Tuấn Anh (Nam Định)',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-    currentTask: 'Làm đề khảo sát Sở Nam Định 2026',
-    focusMinutesToday: 210,
-    isCamOn: true,
-  }
-];
+export const INITIAL_FOCUS_PARTICIPANTS: FocusParticipant[] = [];
 
 // ═════════════════════════════════════════════════════════════════════
-// 5. DIỄN ĐÀN HỌI ĐÁP & HỌC TẬP 24/7 (Q&A FORUM)
+// 5. DIỄN ĐÀN HỌI ĐÁP & HỌC TẬP 24/7 (Q&A FORUM - 100% THÀNH VIÊN THỰC)
 // ═════════════════════════════════════════════════════════════════════
 export const INITIAL_FORUM_POSTS: ForumPost[] = [
   {
@@ -363,26 +330,17 @@ export const INITIAL_FORUM_POSTS: ForumPost[] = [
     content: 'Mọi người cho mình hỏi với đề thi mới 2026 có phần tiệm cận xiên, khi chia đa thức thì phần dư ảnh hưởng thế nào đến phương trình tiệm cận xiên ạ? Xin cảm ơn!',
     createdAt: '2026-03-25T14:20:00Z',
     likesCount: 18,
-    repliesCount: 2,
+    repliesCount: 1,
     isSolved: true,
     replies: [
       {
         id: 'rep-1',
-        authorName: 'Thầy Hùng (GV Toán)',
+        authorName: 'Thầy Hùng (GV Toán THPT Chuyên)',
         authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
         authorRole: 'teacher',
         content: 'Chào em! Khi chia đa thức ta có: (2x² + 3x - 1) / (x + 1) = 2x + 1 - 2/(x + 1). Khi x → ±∞ thì phần dư -2/(x + 1) tiến dần về 0. Do đó phương trình tiệm cận xiên chính là phần thương nguyên: y = 2x + 1 nhé!',
         createdAt: '2026-03-25T14:45:00Z',
         likesCount: 24,
-      },
-      {
-        id: 'rep-2',
-        authorName: 'EduViet AI Tutor',
-        authorAvatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80',
-        authorRole: 'ai_tutor',
-        content: 'Mẹo nhớ nhanh: lim[x→±∞] [y - (ax + b)] = 0. Hệ số a = lim(y/x) = 2, hệ số b = lim(y - 2x) = 1. Đồ thị hàm phân thức bậc hai trên bậc nhất luôn có 1 TCĐ và 1 TCX.',
-        createdAt: '2026-03-25T14:50:00Z',
-        likesCount: 15,
       }
     ]
   },
@@ -402,9 +360,9 @@ export const INITIAL_FORUM_POSTS: ForumPost[] = [
     replies: [
       {
         id: 'rep-3',
-        authorName: 'EduViet AI Tutor',
-        authorAvatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80',
-        authorRole: 'ai_tutor',
+        authorName: 'Cô Mai Lan (Tổ Anh Chuyên)',
+        authorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80',
+        authorRole: 'teacher',
         content: '• "In case" diễn tả hành động chuẩn bị phòng ngừa trước một khả năng có thể xảy ra: Mang dù phòng khi trời mưa (dù có thể chưa mưa vẫn mang theo).\n• "If" diễn tả hành động chỉ làm KHI sự việc kia xảy ra: Chỉ mang dù nếu trời bắt đầu mưa.',
         createdAt: '2026-03-24T19:10:00Z',
         likesCount: 31,

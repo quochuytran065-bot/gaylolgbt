@@ -17,7 +17,8 @@ import {
   Bell,
   RefreshCw,
   AlertCircle,
-  Video
+  Video,
+  ShieldCheck
 } from 'lucide-react';
 import { FocusParticipant, AmbientSoundType } from '../types';
 import { INITIAL_FOCUS_PARTICIPANTS } from '../data/learningPlatformData';
@@ -837,44 +838,52 @@ export const FocusStudyRoomView: React.FC = () => {
             </div>
           </div>
 
-          {/* ── Virtual Participants List (Study Together) ────────── */}
+          {/* ── Bảng Thống Kê Phiên Học Tập Cá Nhân (Thực Tế 100%) ────────── */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4 transition-colors">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
-                <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                Bạn Học Cùng Phòng Đang Online
+                <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                Không Gian Tự Học Cá Nhân
               </h4>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> 48 bạn đang học
+              <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold bg-teal-50 dark:bg-teal-950/80 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" /> Phiên học thực chiến
               </span>
             </div>
 
-            <div className="space-y-3">
-              {participants.map(p => (
-                <div key={p.id} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <img src={p.avatar} alt={p.name} className="w-10 h-10 rounded-full object-cover border-2 border-emerald-400 dark:border-emerald-500" />
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
-                    </div>
-                    <div>
-                      <h5 className="text-xs font-bold text-slate-900 dark:text-slate-100">{p.name}</h5>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
-                        {p.currentTask}
-                      </p>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                <span className="text-[10px] text-slate-400 block font-semibold">Tập trung hôm nay</span>
+                <span className="text-xl font-black text-teal-600 dark:text-teal-400 font-mono mt-1 block">
+                  {Math.floor(sessionsCompleted * 25)} phút
+                </span>
+                <span className="text-[10px] text-slate-500">{sessionsCompleted} chu kỳ Pomodoro</span>
+              </div>
 
-                  <div className="text-right shrink-0">
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block">Tập trung</span>
-                    <strong className="text-xs text-teal-600 dark:text-teal-400">{p.focusMinutesToday} phút</strong>
-                  </div>
-                </div>
-              ))}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                <span className="text-[10px] text-slate-400 block font-semibold">Chế độ âm thanh</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1 block truncate">
+                  {selectedSound === 'lofi' ? 'Lo-Fi Piano' : selectedSound === 'rain' ? 'Mưa Êm Đêm' : selectedSound === 'cafe' ? 'Quán Cà Phê' : selectedSound === 'waves' ? 'Sóng Biển' : 'Tắt âm'}
+                </span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                  {isAudioPlaying ? '● Đang phát' : '○ Tắt'}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 space-y-2 text-xs">
+              <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span>Quy chuẩn phòng tự học Deep Work:</span>
+              </div>
+              <ul className="text-[11px] text-slate-600 dark:text-slate-400 space-y-1 list-disc pl-4 leading-relaxed">
+                <li>Bật webcam tự soi gương để rèn tư thế ngồi nghiêm túc chuẩn phòng thi.</li>
+                <li>Không sử dụng mạng xã hội hoặc chuyển tab làm gián đoạn chu kỳ 25 phút.</li>
+                <li>Nghỉ ngắn 5 phút sau mỗi hiệp để não bộ củng cố kiến thức.</li>
+              </ul>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/60 text-center text-xs text-teal-800 dark:text-teal-200">
-              💡 <em>"Mỗi phút bạn tập trung kiên trì hôm nay là một bước tiến gần hơn đến cánh cổng trường Đại học mơ ước!"</em>
+              💡 <em>&quot;Mỗi phút bạn tập trung kiên trì hôm nay là một bước tiến gần hơn đến cánh cổng trường Đại học mơ ước!&quot;</em>
             </div>
           </div>
 

@@ -15,7 +15,9 @@ import {
   Check,
   X,
   FileCheck,
-  Calculator
+  Calculator,
+  Scissors,
+  BookMarked
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { CasioCalculator } from './CasioCalculator';
@@ -44,7 +46,11 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
   const [userTrueFalseAnswers, setUserTrueFalseAnswers] = useState<Record<number, TrueFalseUserAnswer>>({});
   const [userShortAnswers, setUserShortAnswers] = useState<Record<number, string>>({});
 
+  // CBT Tools State: Flags, Eliminations, 4-Box Bubble Mask error
   const [flaggedQuestions, setFlaggedQuestions] = useState<number[]>([]);
+  const [eliminatedOptions, setEliminatedOptions] = useState<Record<number, ChoiceKey[]>>({});
+  const [bubbleErrorMsg, setBubbleErrorMsg] = useState<string>('');
+
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState<boolean>(false);
   const [isTimeUpAlert, setIsTimeUpAlert] = useState<boolean>(false);
   const [isCalcOpen, setIsCalcOpen] = useState<boolean>(false);
@@ -237,21 +243,156 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
     onFinishExam(result);
   }, [exam, secondsRemaining, totalSeconds, userAnswers, userTrueFalseAnswers, userShortAnswers, currentUser, onFinishExam]);
 
-  // Countdown Timer
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSecondsRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setIsTimeUpAlert(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+  // ── Anti-Drift Timestamp Timer & Crash Recovery (Chuẩn Module 1) ──
+  const TIMER_STORAGE_KEY = `cbt_exam_endtime_${exam.id}`;
+  const SESSION_STORAGE_KEY = `cbt_session_${exam.id}`;
 
-    return () => clearInterval(timer);
-  }, []);
+  // 1. Crash recovery: Khôi phục phiên thi nếu F5 hoặc rớt mạng
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.userAnswers) setUserAnswers(parsed.userAnswers);
+        if (parsed.userTrueFalseAnswers) setUserTrueFalseAnswers(parsed.userTrueFalseAnswers);
+        if (parsed.userShortAnswers) setUserShortAnswers(parsed.userShortAnswers);
+        if (parsed.flaggedQuestions) setFlaggedQuestions(parsed.flaggedQuestions);
+        if (parsed.eliminatedOptions) setEliminatedOptions(parsed.eliminatedOptions);
+        toast.info('Đã khôi phục bài làm', 'Toàn bộ câu trả lời trước đó đã được tự động phục hồi an toàn.');
+      }
+    } catch (e) {
+      console.warn('Lỗi khôi phục session:', e);
+    }
+  }, [exam.id]);
+
+  // 2. Debounced auto-save (200ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
+          userAnswers,
+          userTrueFalseAnswers,
+          userShortAnswers,
+          flaggedQuestions,
+          eliminatedOptions
+        }));
+      } catch (e) {
+        console.warn('Lỗi ghi nhớ LocalStorage:', e);
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [userAnswers, userTrueFalseAnswers, userShortAnswers, flaggedQuestions, eliminatedOptions, exam.id]);
+
+  // 3. Anti-drift countdown timer dựa trên mốc thời gian thực endTime
+  useEffect(() => {
+    let targetEndTime = 0;
+    try {
+      const savedEndTime = localStorage.getItem(TIMER_STORAGE_KEY);
+      if (savedEndTime) {
+        const parsed = Number(savedEndTime);
+        if (parsed > Date.now()) {
+          targetEndTime = parsed;
+        }
+      }
+    } catch (e) { /* noop */ }
+
+    if (!targetEndTime) {
+      targetEndTime = Date.now() + totalSeconds * 1000;
+      try {
+        localStorage.setItem(TIMER_STORAGE_KEY, String(targetEndTime));
+      } catch (e) { /* noop */ }
+    }
+
+    const updateTimer = () => {
+      const remaining = Math.max(0, Math.floor((targetEndTime - Date.now()) / 1000));
+      setSecondsRemaining(remaining);
+      if (remaining <= 0) {
+        setIsTimeUpAlert(true);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    // Chống đứng giờ khi chuyển tab hoặc mở ứng dụng khác trên Mobile
+    const handleVisibility = () => {
+      if (!document.hidden) updateTimer();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [exam.id, totalSeconds]);
+
+  // 4. Toggle gạch bỏ đáp án nhiễu (Right click hoặc nút kéo)
+  const toggleEliminateOption = (qId: number, optKey: ChoiceKey) => {
+    setEliminatedOptions(prev => {
+      const currentList = prev[qId] || [];
+      const isElim = currentList.includes(optKey);
+      const updated = isElim ? currentList.filter(k => k !== optKey) : [...currentList, optKey];
+      // Nếu đang chọn đáp án này mà gạch bỏ thì hủy chọn
+      if (!isElim && userAnswers[qId] === optKey) {
+        setUserAnswers(curr => {
+          const next = { ...curr };
+          delete next[qId];
+          return next;
+        });
+      }
+      return { ...prev, [qId]: updated };
+    });
+  };
+
+  // 5. Logic 4 Ô Phiếu Trả Lời Ngắn (4-Box Bubble Sheet Mask)
+  const handleBubbleInputChange = (qId: number, pos: number, val: string) => {
+    let char = val;
+    if (char === ',') char = '.';
+
+    let isValid = false;
+    if (pos === 0 && (/[0-9\-]/.test(char) || char === '')) isValid = true;
+    if ((pos === 1 || pos === 2) && (/[0-9\.]/.test(char) || char === '')) isValid = true;
+    if (pos === 3 && (/[0-9]/.test(char) || char === '')) isValid = true;
+
+    if (!isValid && char !== '') {
+      setBubbleErrorMsg('Ký tự không hợp lệ! Ô 1 chỉ nhận số hoặc dấu "-", ô 2-3 nhận số hoặc dấu ".", ô 4 chỉ nhận số.');
+      setTimeout(() => setBubbleErrorMsg(''), 3500);
+      return;
+    }
+
+    setBubbleErrorMsg('');
+
+    const currentStr = String(userShortAnswers[qId] || '');
+    const chars = currentStr.padEnd(4, ' ').split('').slice(0, 4);
+    chars[pos] = char || ' ';
+    const newStr = chars.join('').trimEnd();
+
+    setUserShortAnswers(prev => ({
+      ...prev,
+      [qId]: newStr
+    }));
+
+    // Tự động nhảy sang ô tiếp theo
+    if (char && pos < 3) {
+      const nextInput = document.getElementById(`bubble-box-${qId}-${pos + 1}`) as HTMLInputElement;
+      if (nextInput) {
+        nextInput.focus();
+        nextInput.select();
+      }
+    }
+  };
+
+  const handleBubbleKeyDown = (qId: number, pos: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      const currentVal = (e.target as HTMLInputElement).value;
+      if (!currentVal && pos > 0) {
+        const prevInput = document.getElementById(`bubble-box-${qId}-${pos - 1}`) as HTMLInputElement;
+        if (prevInput) {
+          prevInput.focus();
+        }
+      }
+    }
+  };
 
   // Handle time up trigger
   useEffect(() => {
@@ -272,17 +413,33 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
   const currentQuestion = exam.questions[currentQuestionIndex];
   const isFlagged = flaggedQuestions.includes(currentQuestion.id);
 
-  // Helper check if question is answered
-  const isQuestionAnswered = useCallback((q: typeof exam.questions[0]) => {
+  // 4 Status Evaluation (Module 1 Tiêu Chuẩn 6)
+  // Gray (unanswered) | Amber pulsating (incomplete 1-3 True/False) | Emerald (completed) | Purple/Red (flagged)
+  const getQuestionStatus = useCallback((q: typeof exam.questions[0]): 'unanswered' | 'incomplete' | 'completed' | 'flagged' => {
+    if (flaggedQuestions.includes(q.id)) return 'flagged';
+
     if (q.type === 'true_false' || q.part === 'II') {
-      const tf = userTrueFalseAnswers[q.id];
-      return tf && Object.keys(tf).length > 0;
+      const tf = userTrueFalseAnswers[q.id] || {};
+      const answeredItemsCount = Object.keys(tf).length;
+      const totalItems = q.trueFalseItems?.length || 4;
+      if (answeredItemsCount === 0) return 'unanswered';
+      if (answeredItemsCount < totalItems) return 'incomplete';
+      return 'completed';
     }
+
     if (q.type === 'short_answer' || q.part === 'III') {
-      return Boolean(userShortAnswers[q.id]?.trim());
+      const val = userShortAnswers[q.id]?.trim();
+      return val ? 'completed' : 'unanswered';
     }
-    return Boolean(userAnswers[q.id]);
-  }, [userAnswers, userTrueFalseAnswers, userShortAnswers]);
+
+    // Part I: multiple choice
+    return userAnswers[q.id] ? 'completed' : 'unanswered';
+  }, [flaggedQuestions, userTrueFalseAnswers, userShortAnswers, userAnswers]);
+
+  // Helper check if question has any answer
+  const isQuestionAnswered = useCallback((q: typeof exam.questions[0]) => {
+    return getQuestionStatus(q) === 'completed' || getQuestionStatus(q) === 'incomplete';
+  }, [getQuestionStatus]);
 
   // Keyboard navigation & shortcuts for Part I (A, B, C, D)
   useEffect(() => {
@@ -352,6 +509,18 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
   const answeredCount = useMemo(() => {
     return exam.questions.filter(q => isQuestionAnswered(q)).length;
   }, [exam.questions, isQuestionAnswered]);
+
+  const fullyCompletedCount = useMemo(() => {
+    return exam.questions.filter(q => getQuestionStatus(q) === 'completed').length;
+  }, [exam.questions, getQuestionStatus]);
+
+  const incompleteCount = useMemo(() => {
+    return exam.questions.filter(q => getQuestionStatus(q) === 'incomplete').length;
+  }, [exam.questions, getQuestionStatus]);
+
+  const unansweredCount = useMemo(() => {
+    return exam.questions.filter(q => getQuestionStatus(q) === 'unanswered').length;
+  }, [exam.questions, getQuestionStatus]);
 
   const remainingCount = exam.questions.length - answeredCount;
 
@@ -517,34 +686,79 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
             {/* CASE 1: PART I - Multiple Choice (A, B, C, D) */}
             {(!currentQuestion.type || currentQuestion.type === 'multiple_choice') && currentQuestion.options && (
               <div className="space-y-3 pt-2">
-                {currentQuestion.options.map((option) => {
-                  const isSelected = userAnswers[currentQuestion.id] === option.key;
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pb-1">
+                  <span>Chọn 1 trong 4 phương án (nhấn phím A, B, C, D để chọn nhanh):</span>
+                  <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-slate-400">
+                    <Scissors className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Chuột phải hoặc bấm kéo để gạch bỏ phương án nhiễu</span>
+                  </span>
+                </div>
 
-                  return (
-                    <button
-                      key={option.key}
-                      onClick={() => selectOption(option.key)}
-                      className={`w-full text-left p-4 rounded-xl border transition-all flex items-start gap-3.5 cursor-pointer ${
-                        isSelected
-                          ? 'bg-sky-50/90 dark:bg-sky-950/60 border-sky-600 dark:border-sky-500 shadow-2xs text-slate-900 dark:text-slate-100 ring-1 ring-sky-600 dark:ring-sky-500'
-                          : 'bg-white dark:bg-slate-850 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200'
-                      }`}
-                    >
-                      <div 
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${
-                          isSelected 
-                            ? 'bg-sky-700 text-white shadow-2xs' 
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
-                        }`}
+                <div className="space-y-2.5">
+                  {currentQuestion.options.map((option) => {
+                    const isSelected = userAnswers[currentQuestion.id] === option.key;
+                    const isEliminated = (eliminatedOptions[currentQuestion.id] || []).includes(option.key);
+
+                    return (
+                      <div
+                        key={option.key}
+                        className="group relative flex items-center gap-2"
                       >
-                        {option.key}
+                        <button
+                          onClick={() => {
+                            if (isEliminated) {
+                              toggleEliminateOption(currentQuestion.id, option.key);
+                            }
+                            selectOption(option.key);
+                          }}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            toggleEliminateOption(currentQuestion.id, option.key);
+                          }}
+                          className={`w-full text-left p-4 rounded-xl border transition-all flex items-start gap-3.5 cursor-pointer ${
+                            isEliminated
+                              ? 'opacity-40 line-through bg-slate-100/70 dark:bg-slate-900/60 border-dashed border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500'
+                              : isSelected
+                              ? 'bg-sky-50/90 dark:bg-sky-950/60 border-sky-600 dark:border-sky-500 shadow-2xs text-slate-900 dark:text-slate-100 ring-1 ring-sky-600 dark:ring-sky-500'
+                              : 'bg-white dark:bg-slate-850 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200'
+                          }`}
+                        >
+                          <div 
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${
+                              isEliminated
+                                ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 line-through'
+                                : isSelected 
+                                ? 'bg-sky-700 text-white shadow-2xs' 
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                            }`}
+                          >
+                            {option.key}
+                          </div>
+                          <div className={`text-sm sm:text-base font-normal pt-0.5 leading-snug flex-1 ${isEliminated ? 'line-through text-slate-400' : ''}`}>
+                            {option.label}
+                          </div>
+                        </button>
+
+                        {/* Nút gạch bỏ / khôi phục phương án nhiễu */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleEliminateOption(currentQuestion.id, option.key);
+                          }}
+                          title={isEliminated ? 'Khôi phục phương án này' : 'Gạch bỏ phương án nhiễu (Right click)'}
+                          className={`p-2.5 rounded-xl border text-xs transition-colors shrink-0 cursor-pointer ${
+                            isEliminated
+                              ? 'bg-rose-50 dark:bg-rose-950/80 border-rose-300 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-100'
+                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 hover:text-rose-600 hover:border-rose-300 dark:hover:border-rose-700'
+                          }`}
+                        >
+                          <Scissors className="w-4 h-4" />
+                        </button>
                       </div>
-                      <div className="text-sm sm:text-base font-normal pt-0.5 leading-snug flex-1">
-                        {option.label}
-                      </div>
-                    </button>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -615,35 +829,83 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
               </div>
             )}
 
-            {/* CASE 3: PART III - Short Answer (Numerical Input) */}
+            {/* CASE 3: PART III - Short Answer (Numerical Input - 4-Box Bubble Sheet Mask) */}
             {(currentQuestion.type === 'short_answer' || currentQuestion.part === 'III') && (
               <div className="space-y-4 pt-2">
                 <div className="p-4 bg-sky-50/80 dark:bg-sky-950/40 rounded-xl border border-sky-200 dark:border-sky-900/60 text-xs text-sky-900 dark:text-sky-300 flex items-center gap-2">
                   <FileCheck className="w-4 h-4 text-sky-700 dark:text-sky-400 shrink-0" />
                   <span>
-                    <strong>Hướng dẫn trả lời:</strong> Nhập kết quả dưới dạng số nguyên hoặc số thập phân (ví dụ: 4 hoặc 1.33). Không cần nhập đơn vị đo.
+                    <strong>Quy chuẩn Phiếu Trả Lời Ngắn Bộ GD&ĐT (Tối đa 4 ô ký tự):</strong> Ô 1 nhận dấu trừ (-) hoặc số; ô 2-3 nhận số hoặc dấu phẩy (,/.); ô 4 chỉ nhận số.
                   </span>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                    Ô Điền Đáp Số Của Thí Sinh:
-                  </label>
-                  <div className="relative max-w-sm">
-                    <input
-                      type="text"
-                      value={userShortAnswers[currentQuestion.id] || ''}
-                      onChange={(e) => setShortAnswer(e.target.value)}
-                      placeholder="Ví dụ: 7 hoặc 1.33"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-700 focus:border-sky-600 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900 bg-white dark:bg-slate-900 font-mono text-lg font-bold text-slate-900 dark:text-slate-100 outline-none transition-all shadow-xs"
-                    />
+                {bubbleErrorMsg && (
+                  <div className="p-3 bg-rose-50 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 rounded-xl text-rose-800 dark:text-rose-300 text-xs flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{bubbleErrorMsg}</span>
                   </div>
-                  {userShortAnswers[currentQuestion.id]?.trim() && (
-                    <div className="text-xs text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Đã ghi nhận kết quả: <strong className="font-mono">{userShortAnswers[currentQuestion.id]}</strong></span>
-                    </div>
-                  )}
+                )}
+
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                      Phiếu Trả Lời Ngắn (Đúng 4 Ô Ký Tự Chuẩn BGD):
+                    </label>
+                    <span className="text-[11px] font-mono text-slate-500">
+                      Độ dài: {(userShortAnswers[currentQuestion.id] || '').length}/4 ô
+                    </span>
+                  </div>
+
+                  {/* 4 Discrete Boxes */}
+                  <div className="grid grid-cols-4 gap-2.5 sm:gap-4 max-w-md mx-auto">
+                    {[0, 1, 2, 3].map((pos) => {
+                      const curChar = (userShortAnswers[currentQuestion.id] || '')[pos] || '';
+                      return (
+                        <div key={pos} className="flex flex-col items-center gap-1.5">
+                          <input
+                            id={`bubble-box-${currentQuestion.id}-${pos}`}
+                            type="text"
+                            maxLength={1}
+                            value={curChar === ' ' ? '' : curChar}
+                            onChange={(e) => handleBubbleInputChange(currentQuestion.id, pos, e.target.value)}
+                            onKeyDown={(e) => handleBubbleKeyDown(currentQuestion.id, pos, e)}
+                            placeholder={pos === 0 ? '±/0' : pos === 1 || pos === 2 ? './0' : '0'}
+                            className="w-full h-14 sm:h-16 text-center text-xl sm:text-2xl font-black font-mono rounded-xl border-2 border-slate-300 dark:border-slate-700 focus:border-sky-600 focus:ring-4 focus:ring-sky-100 dark:focus:ring-sky-950 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none transition-all shadow-xs"
+                          />
+                          <span className="text-[10px] font-mono text-slate-400 uppercase">
+                            Ô {pos + 1}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Quick clear and Result summary */}
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                    {userShortAnswers[currentQuestion.id]?.trim() ? (
+                      <div className="text-xs text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1.5">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span>Giá trị ghi nhận: <strong className="font-mono text-sm underline">{userShortAnswers[currentQuestion.id]}</strong></span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-400 italic">Chưa nhập đáp số cho câu này</span>
+                    )}
+
+                    {userShortAnswers[currentQuestion.id] && (
+                      <button
+                        type="button"
+                        onClick={() => setUserShortAnswers(prev => {
+                          const n = { ...prev };
+                          delete n[currentQuestion.id];
+                          return n;
+                        })}
+                        className="text-xs text-slate-400 hover:text-rose-600 flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>Xóa nhập lại</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -698,23 +960,23 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
               </div>
             </div>
 
-            {/* Status Legend */}
+            {/* Status Legend - 4 Color Standards */}
             <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500 dark:text-slate-400 pb-2">
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-sky-700"></span>
-                <span>Đã trả lời</span>
+                <span className="w-3 h-3 rounded bg-emerald-600 shrink-0 shadow-2xs"></span>
+                <span>Đã làm đủ ({fullyCompletedCount})</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700"></span>
-                <span>Chưa trả lời</span>
+                <span className="w-3 h-3 rounded bg-amber-400 border border-amber-500 animate-pulse shrink-0"></span>
+                <span>Làm dở ({incompleteCount})</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-amber-100 dark:bg-amber-950/80 border border-amber-400 dark:border-amber-600"></span>
-                <span>Đã gắn cờ</span>
+                <span className="w-3 h-3 rounded bg-purple-600 shrink-0"></span>
+                <span>Gắn cờ ({flaggedQuestions.length})</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded ring-2 ring-sky-600"></span>
-                <span>Đang chọn</span>
+                <span className="w-3 h-3 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shrink-0"></span>
+                <span>Chưa làm ({unansweredCount})</span>
               </div>
             </div>
 
@@ -740,14 +1002,14 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                     : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
               >
-                Chưa làm ({remainingCount})
+                Chưa xong ({unansweredCount + incompleteCount})
               </button>
               <button
                 type="button"
                 onClick={() => setPaletteFilter('flagged')}
                 className={`flex-1 py-1 rounded-lg transition-all cursor-pointer ${
                   paletteFilter === 'flagged'
-                    ? 'bg-white dark:bg-slate-700 text-rose-700 dark:text-rose-300 shadow-2xs font-bold'
+                    ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-300 shadow-2xs font-bold'
                     : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
               >
@@ -760,64 +1022,74 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
               {exam.questions
                 .map((q, idx) => ({ q, idx }))
                 .filter(({ q }) => {
-                  if (paletteFilter === 'unanswered') return !isQuestionAnswered(q);
+                  if (paletteFilter === 'unanswered') return getQuestionStatus(q) === 'unanswered' || getQuestionStatus(q) === 'incomplete';
                   if (paletteFilter === 'flagged') return flaggedQuestions.includes(q.id);
                   return true;
                 })
                 .map(({ q, idx }) => {
-                const isAnswered = isQuestionAnswered(q);
+                const status = getQuestionStatus(q);
                 const isCurrent = currentQuestionIndex === idx;
-                const isFlag = flaggedQuestions.includes(q.id);
                 const partColor = q.part === 'I' ? 'border-t-2 border-t-blue-400' :
                                   q.part === 'II' ? 'border-t-2 border-t-amber-400' :
                                   q.part === 'III' ? 'border-t-2 border-t-emerald-400' : '';
+
+                let statusStyle = '';
+                if (status === 'flagged') {
+                  statusStyle = 'bg-purple-600 text-white shadow-xs hover:bg-purple-700 border-purple-700 font-bold';
+                } else if (status === 'incomplete') {
+                  statusStyle = 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border-2 border-amber-400 dark:border-amber-500 animate-pulse font-extrabold';
+                } else if (status === 'completed') {
+                  statusStyle = 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700';
+                } else {
+                  statusStyle = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/30';
+                }
 
                 return (
                   <button
                     key={q.id}
                     onClick={() => setCurrentQuestionIndex(idx)}
-                    title={`Câu ${idx + 1}${q.part ? ` • Phần ${q.part}` : ''}${isAnswered ? ' ✓ Đã trả lời' : ' • Chưa làm'}${isFlag ? ' 🚩 Đã gắn cờ' : ''}`}
+                    title={`Câu ${idx + 1}${q.part ? ` • Phần ${q.part}` : ''}${status === 'completed' ? ' ✓ Đã hoàn thành' : status === 'incomplete' ? ' ⚠️ Đang làm dở' : ' • Chưa làm'}${status === 'flagged' ? ' 🚩 Đã gắn cờ' : ''}`}
                     className={`relative h-9 rounded-lg font-mono text-xs font-bold transition-all flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 ${partColor} ${
                       isCurrent
-                        ? 'ring-2 ring-sky-600 ring-offset-1 dark:ring-offset-slate-900 shadow-md'
+                        ? 'ring-2 ring-sky-500 ring-offset-1 dark:ring-offset-slate-900 shadow-md font-black'
                         : ''
-                    } ${
-                      isAnswered
-                        ? isFlag
-                          ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-400 dark:border-amber-600 shadow-xs'
-                          : 'bg-sky-600 dark:bg-sky-700 text-white shadow-xs hover:bg-sky-700 dark:hover:bg-sky-600'
-                        : isFlag
-                          ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700'
-                          : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/30'
-                    }`}
+                    } ${statusStyle}`}
                   >
                     <span>{idx + 1}</span>
-                    {isFlag && (
-                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border border-white dark:border-slate-900 shadow-xs" />
+                    {status === 'flagged' && (
+                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border border-white dark:border-slate-900 shadow-xs" />
                     )}
-                    {isAnswered && !isFlag && (
-                      <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-white dark:border-slate-700" />
+                    {status === 'incomplete' && (
+                      <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-amber-500 rounded-full border border-white dark:border-slate-700 animate-ping" />
+                    )}
+                    {status === 'completed' && (
+                      <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-300 rounded-full border border-white dark:border-slate-700" />
                     )}
                   </button>
                 );
               })}
             </div>
 
-
             {/* Quick summary stats */}
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 space-y-1">
               <div className="flex justify-between">
-                <span>Số câu đã làm:</span>
-                <strong className="text-slate-900 dark:text-slate-100">{answeredCount} câu</strong>
+                <span>Đã làm đủ:</span>
+                <strong className="text-emerald-700 dark:text-emerald-400">{fullyCompletedCount} câu</strong>
               </div>
+              {incompleteCount > 0 && (
+                <div className="flex justify-between text-amber-700 dark:text-amber-400">
+                  <span>Làm dở (thiếu ý):</span>
+                  <strong>{incompleteCount} câu</strong>
+                </div>
+              )}
               <div className="flex justify-between">
-                <span>Số câu còn lại:</span>
-                <strong className={remainingCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
-                  {remainingCount} câu
+                <span>Chưa làm:</span>
+                <strong className={unansweredCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}>
+                  {unansweredCount} câu
                 </strong>
               </div>
               {flaggedQuestions.length > 0 && (
-                <div className="flex justify-between text-amber-700 dark:text-amber-400">
+                <div className="flex justify-between text-purple-700 dark:text-purple-400">
                   <span>Cần xem lại:</span>
                   <strong>{flaggedQuestions.length} câu</strong>
                 </div>
@@ -870,13 +1142,19 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                 <strong className="text-slate-900 dark:text-slate-100">{exam.questions.length} câu</strong>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-600 dark:text-slate-400">Số câu đã hoàn thành:</span>
-                <strong className="text-emerald-700 dark:text-emerald-400">{answeredCount} câu</strong>
+                <span className="text-slate-600 dark:text-slate-400">Đã hoàn thành đủ:</span>
+                <strong className="text-emerald-700 dark:text-emerald-400">{fullyCompletedCount} câu</strong>
               </div>
+              {incompleteCount > 0 && (
+                <div className="flex justify-between text-amber-700 dark:text-amber-400">
+                  <span>Câu làm dở (Đúng/Sai thiếu ý):</span>
+                  <strong>{incompleteCount} câu</strong>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-slate-600 dark:text-slate-400">Số câu chưa làm:</span>
-                <strong className={remainingCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}>
-                  {remainingCount} câu
+                <strong className={unansweredCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}>
+                  {unansweredCount} câu
                 </strong>
               </div>
               <div className="flex justify-between">
@@ -885,11 +1163,12 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
               </div>
             </div>
 
-            {remainingCount > 0 && (
+            {(unansweredCount > 0 || incompleteCount > 0) && (
               <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/40 rounded-lg text-xs text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
                 <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                 <span>
-                  Bạn còn <strong>{remainingCount}</strong> câu chưa làm xong. Các câu chưa làm sẽ được tính là 0 điểm.
+                  <strong>Cảnh báo nộp bài sớm:</strong> Bạn còn <strong>{unansweredCount}</strong> câu chưa làm
+                  {incompleteCount > 0 ? ` và ${incompleteCount} câu Đúng/Sai chưa chọn đủ 4 ý` : ''}. Các câu/ý còn thiếu sẽ bị tính 0 điểm theo quy chuẩn GDPT 2018!
                 </span>
               </div>
             )}
@@ -946,7 +1225,7 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
             <span>📋 Bảng câu hỏi</span>
           </span>
           <span className="font-mono bg-white/20 px-2 py-0.5 rounded-lg text-emerald-300">
-            {answeredCount}/{exam.questions.length} đã làm
+            {fullyCompletedCount}/{exam.questions.length} đã làm đủ
           </span>
         </button>
 
@@ -1001,14 +1280,14 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                     : 'text-slate-500'
                 }`}
               >
-                Chưa làm ({remainingCount})
+                Chưa xong ({unansweredCount + incompleteCount})
               </button>
               <button
                 type="button"
                 onClick={() => setPaletteFilter('flagged')}
                 className={`flex-1 py-1 rounded-lg transition-all cursor-pointer ${
                   paletteFilter === 'flagged'
-                    ? 'bg-white dark:bg-slate-700 text-rose-700 dark:text-rose-300 shadow-2xs font-bold'
+                    ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-300 shadow-2xs font-bold'
                     : 'text-slate-500'
                 }`}
               >
@@ -1021,17 +1300,27 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
               {exam.questions
                 .map((q, idx) => ({ q, idx }))
                 .filter(({ q }) => {
-                  if (paletteFilter === 'unanswered') return !isQuestionAnswered(q);
+                  if (paletteFilter === 'unanswered') return getQuestionStatus(q) === 'unanswered' || getQuestionStatus(q) === 'incomplete';
                   if (paletteFilter === 'flagged') return flaggedQuestions.includes(q.id);
                   return true;
                 })
                 .map(({ q, idx }) => {
-                const isAnswered = isQuestionAnswered(q);
+                const status = getQuestionStatus(q);
                 const isCurrent = currentQuestionIndex === idx;
-                const isFlag = flaggedQuestions.includes(q.id);
                 const partColor = q.part === 'I' ? 'border-t-2 border-t-blue-400' :
                                   q.part === 'II' ? 'border-t-2 border-t-amber-400' :
                                   q.part === 'III' ? 'border-t-2 border-t-emerald-400' : '';
+
+                let statusStyle = '';
+                if (status === 'flagged') {
+                  statusStyle = 'bg-purple-600 text-white shadow-xs font-bold';
+                } else if (status === 'incomplete') {
+                  statusStyle = 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-300 border-2 border-amber-400 animate-pulse font-extrabold';
+                } else if (status === 'completed') {
+                  statusStyle = 'bg-emerald-600 text-white shadow-xs';
+                } else {
+                  statusStyle = 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200';
+                }
 
                 return (
                   <button
@@ -1044,22 +1333,17 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
                       isCurrent
                         ? 'ring-2 ring-sky-600 ring-offset-2 dark:ring-offset-slate-900 shadow-md font-black'
                         : ''
-                    } ${
-                      isAnswered
-                        ? isFlag
-                          ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-400 dark:border-amber-600 shadow-xs'
-                          : 'bg-sky-600 dark:bg-sky-700 text-white shadow-xs'
-                        : isFlag
-                          ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700'
-                          : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
-                    }`}
+                    } ${statusStyle}`}
                   >
                     <span>{idx + 1}</span>
-                    {isFlag && (
-                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border border-white dark:border-slate-900 shadow-xs" />
+                    {status === 'flagged' && (
+                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border border-white dark:border-slate-900 shadow-xs" />
                     )}
-                    {isAnswered && !isFlag && (
-                      <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-white dark:border-slate-700" />
+                    {status === 'incomplete' && (
+                      <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-amber-500 rounded-full border border-white dark:border-slate-700 animate-ping" />
+                    )}
+                    {status === 'completed' && (
+                      <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-300 rounded-full border border-white dark:border-slate-700" />
                     )}
                   </button>
                 );
@@ -1067,7 +1351,7 @@ export const ExamTakingView: React.FC<ExamTakingViewProps> = ({
             </div>
 
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 shrink-0">
-              <span>Đã làm: <strong className="text-slate-900 dark:text-slate-100">{answeredCount}/{exam.questions.length}</strong></span>
+              <span>Đã làm đủ: <strong className="text-slate-900 dark:text-slate-100">{fullyCompletedCount}/{exam.questions.length}</strong></span>
               <button
                 onClick={() => {
                   setIsMobilePaletteOpen(false);

@@ -3,6 +3,8 @@ import { Exam, Subject, GradeLevel } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { generateUniqueBGDExam, generateExamWithProfile, type ExamDifficultyProfile } from '../services/bgdExamGenerator';
 import { ExternalExamPanel } from './ExternalExamPanel';
+import { AdvancedStudyView } from './AdvancedStudyView';
+import { HardcoreA00Section } from './HardcoreA00Section';
 import { 
   Clock, 
   HelpCircle, 
@@ -15,7 +17,9 @@ import {
   Sparkles,
   Zap,
   Globe,
-  BookMarked
+  BookMarked,
+  Flame,
+  FileCheck2
 } from 'lucide-react';
 
 /* Skeleton row for exam list */
@@ -42,10 +46,14 @@ const SkeletonExamRow = () => (
   </div>
 );
 
+export type ExamHubSubTab = 'exams' | 'courses' | 'hardcore' | 'external';
+
 interface ExamListProps {
   exams: Exam[];
   onStartExam: (exam: Exam) => void;
   onViewPreviousResult: (examId: string) => void;
+  initialTab?: ExamHubSubTab;
+  onOpenDocumentViewer?: (doc: any) => void;
 }
 
 const SUBJECT_OPTIONS: Subject[] = [
@@ -68,10 +76,12 @@ const GRADE_OPTIONS: GradeLevel[] = [
 export const ExamList: React.FC<ExamListProps> = ({ 
   exams, 
   onStartExam, 
-  onViewPreviousResult 
+  onViewPreviousResult,
+  initialTab = 'exams',
+  onOpenDocumentViewer
 }) => {
   const { examHistory } = useAuth();
-  const [activeTab, setActiveTab] = useState<'internal' | 'external'>('internal');
+  const [activeTab, setActiveTab] = useState<ExamHubSubTab>(initialTab);
   const [selectedSubject, setSelectedSubject] = useState<Subject>('Tất cả môn');
   const [selectedGrade, setSelectedGrade] = useState<GradeLevel>('Tất cả lớp');
   const [searchQuery, setSearchQuery] = useState('');
@@ -118,34 +128,82 @@ export const ExamList: React.FC<ExamListProps> = ({
   return (
     <div className="space-y-6">
 
-      {/* ── Tab Switcher ─────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl w-fit border border-slate-200/60 dark:border-slate-700/60 shadow-2xs">
+      {/* ── Unified Tab Switcher (Module Đề Thi & Chuyên Đề 9+) ────────────── */}
+      <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl w-fit border border-slate-200/60 dark:border-slate-700/60 shadow-2xs">
         <button
-          onClick={() => setActiveTab('internal')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-            activeTab === 'internal'
+          onClick={() => setActiveTab('exams')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+            activeTab === 'exams'
               ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-sm'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
-          <BookMarked className="w-4 h-4" />
-          Đề Thi Nội Bộ
+          <BookMarked className="w-4 h-4 text-sky-600" />
+          <span>Ngân Hàng Đề Thi Chuẩn</span>
         </button>
+
+        <button
+          onClick={() => setActiveTab('courses')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+            activeTab === 'courses'
+              ? 'bg-white dark:bg-slate-700 text-amber-700 dark:text-amber-300 shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
+          <span>Chuyên Đề 9+ & Bẫy VDC</span>
+          <span className="text-[10px] bg-rose-500 text-white font-black px-1.5 py-0.2 rounded-full">VIP 9+</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('hardcore')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+            activeTab === 'hardcore'
+              ? 'bg-white dark:bg-slate-700 text-rose-700 dark:text-rose-300 shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
+          <span>Hardcore 8+ A00 (Biến Thiên Số Liệu)</span>
+          <span className="text-[10px] bg-amber-500 text-slate-950 font-extrabold px-1.5 py-0.2 rounded-full">HOT</span>
+        </button>
+
         <button
           onClick={() => setActiveTab('external')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
             activeTab === 'external'
               ? 'bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 shadow-sm'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
-          <Globe className="w-4 h-4" />
-          Kho Đề Tỉnh / Trường
-          <span className="ml-1 text-[10px] bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold px-1.5 py-0.5 rounded-full border border-indigo-200/50 dark:border-indigo-800/50">MỚI</span>
+          <Globe className="w-4 h-4 text-indigo-500" />
+          <span>Kho Đề Tỉnh / Trường</span>
+          <span className="text-[10px] bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold px-1.5 py-0.2 rounded-full border border-indigo-200/50 dark:border-indigo-800/50">AZOTA</span>
         </button>
       </div>
 
-      {/* ── External Tab ─────────────────────────────────────────── */}
+      {/* ── SubTab 1: Chuyên Đề 9+ VDC ───────────────────────────── */}
+      {activeTab === 'courses' && (
+        <AdvancedStudyView
+          onStartExamWithSubject={(sub) => {
+            const match = exams.find(e => e.subject === sub) || exams[0];
+            if (match) onStartExam(match);
+          }}
+          onOpenDocumentViewer={onOpenDocumentViewer}
+        />
+      )}
+
+      {/* ── SubTab 2: Hardcore 8+ A00 Engine ────────────────────── */}
+      {activeTab === 'hardcore' && (
+        <HardcoreA00Section
+          onStartExamWithSubject={(sub) => {
+            const match = exams.find(e => e.subject === sub) || exams[0];
+            if (match) onStartExam(match);
+          }}
+        />
+      )}
+
+      {/* ── SubTab 3: External Tab (Azota & Sở GD&ĐT) ───────────── */}
       {activeTab === 'external' && (
         <ExternalExamPanel
           defaultSubject={selectedSubject !== 'Tất cả môn' ? selectedSubject : undefined}
@@ -153,8 +211,8 @@ export const ExamList: React.FC<ExamListProps> = ({
         />
       )}
 
-      {/* ── Internal Tab ─────────────────────────────────────────── */}
-      {activeTab === 'internal' && (
+      {/* ── SubTab 4: Standard Exam Bank ─────────────────────────── */}
+      {activeTab === 'exams' && (
       <>
 
       {/* Top Banner Overview */}
