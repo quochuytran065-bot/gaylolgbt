@@ -179,13 +179,7 @@ export function detectDocumentSubject(title: string, fallback: Subject): Subject
   return fallback;
 }
 
-// ─── Tự động phân loại Khối Lớp ──────────────────────────────────
-
-export function detectDocumentGrade(title: string): GradeLevel {
-  const lower = title.toLowerCase();
-  if (lower.includes('lớp 10') || lower.includes('lop 10') || lower.includes('khối 10') || /\b10\b/.test(lower)) return 'Lớp 10';
-  if (lower.includes('lớp 11') || lower.includes('lop 11') || lower.includes('khối 11') || /\b11\b/.test(lower)) return 'Lớp 11';
-  if (lower.includes('lớp 12') || lower.includes('lop 12') || lower.includes('khối 12') || lower.includes('thpt') || lower.includes('tốt nghiệp') || /\b12\b/.test(lower)) return 'Lớp 12';
+export function detectDocumentGrade(_title: string): GradeLevel {
   return 'Lớp 12';
 }
 
@@ -297,10 +291,10 @@ export const CURATED_EXTERNAL_DOCUMENTS: DocumentItem[] = [
   },
   {
     id: 'ext-doc-toan-11-decuong-hk2',
-    title: 'Đề Cương Ôn Tập Giữa & Cuối Kỳ 2 Toán 11 (Cấp Số, Đạo Hàm & Quan Hệ Vuông Góc)',
-    description: 'Tài liệu tóm lược trọng tâm kiến thức Đại số & Giải tích 11 và Hình học không gian bám sát bộ sách mới Kết nối tri thức, Cánh diều và Chân trời sáng tạo.',
+    title: 'Đề Cương Ôn Tập Giữa & Cuối Kỳ 2 Toán 12 (Giải Tích & Oxyz Không Gian)',
+    description: 'Tài liệu tóm lược trọng tâm kiến thức Giải tích 12 và Hình học không gian Oxyz bám sát bộ sách mới Kết nối tri thức, Cánh diều và Chân trời sáng tạo.',
     subject: 'Toán học',
-    grade: 'Lớp 11',
+    grade: 'Lớp 12',
     fileType: 'docx',
     fileSize: '3.6 MB',
     pageCount: 38,
@@ -312,42 +306,42 @@ export const CURATED_EXTERNAL_DOCUMENTS: DocumentItem[] = [
     coverImage: stemImg,
     source: 'Thuvienhoclieu',
     sourceUrl: 'https://thuvienhoclieu.com/category/de-thi/de-cuong-on-tap/',
-    downloadUrl: 'https://thuvienhoclieu.com/download/de-cuong-toan-11-hk2-fileword.docx',
+    downloadUrl: 'https://thuvienhoclieu.com/download/de-cuong-toan-12-hk2-fileword.docx',
     category: 'de-cuong',
     isAutoSynced: true,
     directContent: {
-      summary: 'Đề cương hệ thống toàn bộ công thức dãy số, cấp số cộng, cấp số nhân, giới hạn dãy số, giới hạn hàm số, đạo hàm và bài toán khoảng cách trong không gian.',
+      summary: 'Đề cương hệ thống toàn bộ công thức nguyên hàm, tích phân, hàm số mũ logarit, tọa độ Oxyz và bài toán cực trị không gian.',
       sections: [
         {
-          title: 'Chuyên đề 1: Đạo hàm và Quy tắc tính đạo hàm',
-          content: 'Định nghĩa đạo hàm qua giới hạn; Đạo hàm của hàm số lượng giác sin, cos, tan, cot; Đạo hàm hàm hợp; Ý nghĩa hình học của đạo hàm: Phương trình tiếp tuyến của đồ thị hàm số tại điểm M₀(x₀, y₀).',
+          title: 'Chuyên đề 1: Đạo hàm và Khảo sát hàm số nâng cao',
+          content: 'Định nghĩa đạo hàm qua giới hạn; Cực trị hàm hợp; Tiệm cận đứng và tiệm cận ngang; Giá trị lớn nhất và nhỏ nhất trên đoạn.',
           formulasOrNotes: [
             'Tiếp tuyến tại M₀(x₀, y₀): y - y₀ = f\'(x₀)(x - x₀)',
             '(u/v)\' = (u\'v - uv\') / v²',
-            '(sin u)\' = u\' * cos u; (cos u)\' = -u\' * sin u'
+            '(eᵘ)\' = u\' * eᵘ; (ln u)\' = u\' / u'
           ]
         },
         {
-          title: 'Chuyên đề 2: Đường thẳng và Mặt phẳng vuông góc trong không gian',
-          content: 'Điều kiện để đường thẳng vuông góc với mặt phẳng (vuông góc với 2 đường thẳng cắt nhau trong mp); Định lý 3 đường vuông góc; Góc giữa đường thẳng và mặt phẳng; Góc giữa hai mặt phẳng.',
+          title: 'Chuyên đề 2: Phương pháp tọa độ Oxyz trong không gian',
+          content: 'Vectơ chỉ phương, vectơ pháp tuyến; Phương trình mặt phẳng và mặt cầu; Khoảng cách từ điểm đến mặt phẳng; Góc giữa hai mặt phẳng.',
           formulasOrNotes: [
-            'd ⊥ (P) khi d ⊥ a và d ⊥ b (a, b ⊂ (P), a cắt b)',
-            'Khoảng cách từ điểm đến mặt phẳng: dựng đoạn vuông góc kẻ từ điểm đến hình chiếu vuông góc'
+            'd(M, (P)) = |Ax₀ + By₀ + Cz₀ + D| / √(A² + B² + C²)',
+            'Mặt cầu (S): (x-a)² + (y-b)² + (z-c)² = R²'
           ]
         }
       ],
       importantTakeaways: [
         'Hệ số góc k của tiếp tuyến luôn bằng f\'(x₀).',
-        'Góc giữa đường thẳng và mặt phẳng luôn nằm trong đoạn [0°, 90°].'
+        'Khoảng cách không bao giờ nhận giá trị âm.'
       ]
     }
   },
   {
-    id: 'ext-doc-toan-10-decuong',
-    title: 'Đề Cương Ôn Thi Môn Toán 10 Toàn Diện (Hàm Số Bậc Hai & Phương Pháp Tọa Độ Oxy)',
-    description: 'Tổng hợp lý thuyết trọng tâm, bài tập mẫu phân loại từ cơ bản đến vận dụng cao môn Toán lớp 10 theo chương trình GDPT mới.',
+    id: 'ext-doc-toan-12-decuong',
+    title: 'Đề Cương Ôn Thi Môn Toán 12 Toàn Diện (Khảo Sát Hàm Số & Tích Phân Oxyz)',
+    description: 'Tổng hợp lý thuyết trọng tâm, bài tập mẫu phân loại từ cơ bản đến vận dụng cao môn Toán lớp 12 theo chương trình GDPT mới.',
     subject: 'Toán học',
-    grade: 'Lớp 10',
+    grade: 'Lớp 12',
     fileType: 'pdf',
     fileSize: '3.9 MB',
     pageCount: 32,

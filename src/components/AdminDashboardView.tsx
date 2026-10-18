@@ -36,8 +36,20 @@ import {
   Sliders,
   UserCheck,
   Download,
-  Eye
+  Eye,
+  CheckSquare,
+  Square,
+  Copy,
+  Zap,
+  Filter
 } from 'lucide-react';
+import {
+  parseExamDocument,
+  createExamFromParsedQuestions,
+  SAMPLE_AZOTA_GRADE12_DOCUMENT,
+  ParsedQuestionItem,
+  ParsedExamResult
+} from '../services/azotaParserService';
 
 interface AdminDashboardViewProps {
   exams: Exam[];
@@ -59,7 +71,7 @@ const SUBJECT_OPTIONS: Subject[] = [
   'Toán học', 'Vật lý', 'Hóa học', 'Sinh học', 'Tiếng Anh', 'Ngữ văn', 'Lịch sử', 'Tin học', 'Địa lí'
 ];
 
-const GRADE_OPTIONS: GradeLevel[] = ['Lớp 10', 'Lớp 11', 'Lớp 12', 'Đại học'];
+const GRADE_OPTIONS: GradeLevel[] = ['Lớp 12', 'Đại học'];
 
 export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   exams,
@@ -73,7 +85,16 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   onBackToUserView
 }) => {
   const { currentUser, isAdmin, allUsers, deleteUser, toggleUserRole, loginAsAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'exams' | 'users' | 'documents' | 'system'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'exams' | 'users' | 'documents' | 'system' | 'azotaParser'>('overview');
+
+  // Azota & Document Smart Parser State
+  const [azotaRawText, setAzotaRawText] = useState('');
+  const [azotaExamTitle, setAzotaExamTitle] = useState('Đề Khảo Sát Toán 12 Chuẩn Azota 2025');
+  const [azotaSubject, setAzotaSubject] = useState<Subject>('Toán học');
+  const [azotaDuration, setAzotaDuration] = useState(50);
+  const [parsedResult, setParsedResult] = useState<ParsedExamResult | null>(null);
+  const [parserFilter, setParserFilter] = useState<'all' | 'I' | 'II' | 'III'>('all');
+  const [importSuccessMsg, setImportSuccessMsg] = useState('');
 
   // Search & Filter in Admin
   const [examSearch, setExamSearch] = useState('');
@@ -287,6 +308,66 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     setTimeout(() => setSysSavedMsg(''), 3000);
   };
 
+  // ─── Azota Smart Parser Handlers ────────────────────────────────
+  const handleParseDocument = () => {
+    if (!azotaRawText.trim()) return;
+    const result = parseExamDocument(azotaRawText, azotaSubject, azotaExamTitle);
+    setParsedResult(result);
+  };
+
+  const handleLoadSampleAzota = () => {
+    setAzotaRawText(SAMPLE_AZOTA_GRADE12_DOCUMENT);
+    setAzotaExamTitle('Đề Khảo Sát Toán 12 Chuẩn Azota 2025');
+    setAzotaSubject('Toán học');
+    const result = parseExamDocument(SAMPLE_AZOTA_GRADE12_DOCUMENT, 'Toán học', 'Đề Khảo Sát Toán 12 Chuẩn Azota 2025');
+    setParsedResult(result);
+  };
+
+  const handleCreateExamFromParsed = () => {
+    if (!parsedResult || parsedResult.allQuestions.length === 0) return;
+    const selectedQuestions = parsedResult.allQuestions.filter(q => q.isSelected);
+    if (selectedQuestions.length === 0) return;
+    const newExam = createExamFromParsedQuestions(
+      azotaExamTitle,
+      azotaSubject,
+      selectedQuestions,
+      azotaDuration
+    );
+    onAddExam(newExam);
+    setImportSuccessMsg(`🎉 Đã thêm thành công đề thi "${newExam.title}" (${newExam.questions.length} câu) vào ngân hàng đề thi!`);
+    setTimeout(() => setImportSuccessMsg(''), 4000);
+  };
+
+  const handleToggleQuestionSelection = (id: number) => {
+    if (!parsedResult) return;
+    setParsedResult(prev => {
+      if (!prev) return null;
+      const updated = prev.allQuestions.map(q => q.id === id ? { ...q, isSelected: !q.isSelected } : q);
+      return {
+        ...prev,
+        allQuestions: updated,
+        part1Questions: updated.filter(q => q.part === 'I'),
+        part2Questions: updated.filter(q => q.part === 'II'),
+        part3Questions: updated.filter(q => q.part === 'III')
+      };
+    });
+  };
+
+  const handleToggleSelectAll = (select: boolean) => {
+    if (!parsedResult) return;
+    setParsedResult(prev => {
+      if (!prev) return null;
+      const updated = prev.allQuestions.map(q => ({ ...q, isSelected: select }));
+      return {
+        ...prev,
+        allQuestions: updated,
+        part1Questions: updated.filter(q => q.part === 'I'),
+        part2Questions: updated.filter(q => q.part === 'II'),
+        part3Questions: updated.filter(q => q.part === 'III')
+      };
+    });
+  };
+
   // Filtered lists
   const filteredExams = exams.filter(e => {
     const matchSearch = e.title.toLowerCase().includes(examSearch.toLowerCase()) ||
@@ -361,6 +442,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 overflow-x-auto shadow-2xs">
         {[
           { key: 'overview', label: 'Tổng Quan Hệ Thống', icon: BarChart3, count: null },
+          { key: 'azotaParser', label: '📥 Nhập & Tự Lọc Đề Azota', icon: Sparkles, count: 'Mới' },
           { key: 'exams', label: 'Quản Lý Đề Thi & Ca Thi', icon: BookCheck, count: exams.length },
           { key: 'users', label: 'Quản Lý Thí Sinh & Quyền', icon: Users, count: allUsers.length },
           { key: 'documents', label: 'Kho Tài Liệu Học Tập', icon: FileText, count: documents.length },
@@ -1077,6 +1159,443 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               <span>Áp dụng cấu hình toàn hệ thống</span>
             </button>
           </form>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/* TAB: AZOTA & DOCUMENT SMART PARSER                           */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      {activeTab === 'azotaParser' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Header & Feature Guide */}
+          <div className="bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-slate-900 text-white rounded-3xl p-6 border border-purple-700/50 shadow-xl relative overflow-hidden">
+            <div className="relative z-10 space-y-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-300 text-[11px] font-bold">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Trí Tuệ Bóc Tách Tự Động Chuẩn Azota / BGD 2025</span>
+              </div>
+              <h3 className="text-xl font-black font-heading tracking-tight">
+                Thêm Tài Liệu Vào Ngân Hàng Đề Thi & Tự Động Phân Loại Câu Hỏi
+              </h3>
+              <p className="text-xs text-purple-200 max-w-3xl leading-relaxed">
+                Quản trị viên chỉ cần sao chép nội dung văn bản thô từ Word, PDF hoặc nguồn đề thi Azota dán vào ô bên dưới.
+                Thuật toán bóc tách thông minh sẽ tự động chuẩn hóa và phân loại từng câu hỏi vào: 
+                <strong className="text-sky-300"> Phần I (Trắc nghiệm 4 lựa chọn)</strong>, 
+                <strong className="text-amber-300"> Phần II (Đúng/Sai 4 ý)</strong>, và 
+                <strong className="text-emerald-300"> Phần III (Trả lời ngắn - TLN)</strong>, kèm đáp án đúng và lời giải chi tiết.
+              </p>
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleLoadSampleAzota}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer"
+                >
+                  <Copy className="w-4 h-4" />
+                  <span>Dán Thử Đề Mẫu Azota Lớp 12 Chuẩn 2025</span>
+                </button>
+                {azotaRawText && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAzotaRawText('');
+                      setParsedResult(null);
+                    }}
+                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-300" />
+                    <span>Xoá Trắng Ô Nhập</span>
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="absolute right-0 top-0 translate-x-8 -translate-y-6 opacity-10 pointer-events-none">
+              <Zap className="w-64 h-64 text-white" />
+            </div>
+          </div>
+
+          {/* Input Document / Azota Raw Content */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <span>Thiết Lập Thông Tin Đề & Dán Văn Bản Tài Liệu</span>
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Tên Đề Thi Mới:
+                </label>
+                <input
+                  type="text"
+                  value={azotaExamTitle}
+                  onChange={e => setAzotaExamTitle(e.target.value)}
+                  placeholder="Ví dụ: Đề Khảo Sát Toán 12 Azota Chuyên KHTN..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-purple-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Môn Học (Lớp 12):
+                </label>
+                <select
+                  value={azotaSubject}
+                  onChange={e => setAzotaSubject(e.target.value as Subject)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-purple-600 font-semibold"
+                >
+                  {SUBJECT_OPTIONS.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Thời Gian Làm Bài (Phút):
+                </label>
+                <input
+                  type="number"
+                  min="15"
+                  max="180"
+                  value={azotaDuration}
+                  onChange={e => setAzotaDuration(Number(e.target.value))}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-purple-600 font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                <span>Dán Nội Dung Đề Thi / Tài Liệu (Hỗ trợ định dạng Azota, Word, BGD):</span>
+                <span className="text-[11px] text-slate-500 font-normal">
+                  Tự động nhận diện: Câu 1, PHẦN I, PHẦN II, PHẦN III, a) b) c) d), v.v.
+                </span>
+              </label>
+              <textarea
+                rows={10}
+                value={azotaRawText}
+                onChange={e => setAzotaRawText(e.target.value)}
+                placeholder="Dán nội dung đề thi vào đây...&#10;Ví dụ:&#10;PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn.&#10;Câu 1: Cho hàm số y = f(x) có bảng biến thiên...&#10;A. 1   B. 2   C. 3   D. 4&#10;Đáp án: A&#10;&#10;PHẦN II. Câu trắc nghiệm đúng sai.&#10;Câu 13: Cho hàm số...&#10;a) Đạo hàm... [Đúng]&#10;b) ... [Sai]&#10;&#10;PHẦN III. Câu trắc nghiệm trả lời ngắn.&#10;Câu 17: Tính giá trị nhỏ nhất...&#10;Đáp án: 4.5"
+                className="w-full p-4 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-mono leading-relaxed outline-none focus:ring-2 focus:ring-purple-600 resize-y"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <div className="text-xs text-slate-500">
+                {azotaRawText ? (
+                  <span>Đã nhập <strong>{azotaRawText.length.toLocaleString()}</strong> ký tự</span>
+                ) : (
+                  <span>Chưa có nội dung. Bạn có thể nhấn <strong>&quot;Dán Thử Đề Mẫu Azota&quot;</strong> ở trên để trải nghiệm ngay.</span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleParseDocument}
+                disabled={!azotaRawText.trim()}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-purple-700 hover:bg-purple-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-[1.02]"
+              >
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>🚀 Phân Tích & Tự Bóc Tách Câu Hỏi</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Import Success Notification */}
+          {importSuccessMsg && (
+            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>{importSuccessMsg}</span>
+            </div>
+          )}
+
+          {/* Parsed Results Section */}
+          {parsedResult && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              {/* KPI Analytics Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3.5">
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+                  <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Tổng Câu Bóc Tách</div>
+                  <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-heading">
+                    {parsedResult.allQuestions.length}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">
+                    Đã chọn: {parsedResult.allQuestions.filter(q => q.isSelected).length}
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-sky-200/80 dark:border-sky-900/50 shadow-2xs">
+                  <div className="text-[11px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider">Phần I (Trắc Nghiệm)</div>
+                  <div className="text-2xl font-black text-sky-600 dark:text-sky-400 mt-1 font-heading">
+                    {parsedResult.part1Questions.length}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">4 Lựa chọn A, B, C, D</div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-amber-200/80 dark:border-amber-900/50 shadow-2xs">
+                  <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Phần II (Đúng/Sai)</div>
+                  <div className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1 font-heading">
+                    {parsedResult.part2Questions.length}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">4 Ý a), b), c), d)</div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/50 shadow-2xs">
+                  <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Phần III (Trả Lời Ngắn)</div>
+                  <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1 font-heading">
+                    {parsedResult.part3Questions.length}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">Số / Giá trị tư duy</div>
+                </div>
+
+                <div className="col-span-2 sm:col-span-4 lg:col-span-1 bg-gradient-to-br from-purple-700 to-indigo-800 p-4 rounded-2xl text-white shadow-md flex flex-col justify-between">
+                  <div>
+                    <div className="text-[11px] font-bold text-purple-200 uppercase tracking-wider">Trạng Thái Lọc</div>
+                    <div className="text-xs font-extrabold mt-1">Đã Chuẩn Hoá</div>
+                  </div>
+                  <div className="text-[10px] text-purple-200">Sẵn sàng xuất vào Ngân hàng</div>
+                </div>
+              </div>
+
+              {/* Filter Controls & Batch Actions Bar */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex flex-wrap items-center justify-between gap-4">
+                {/* Category Filters */}
+                <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setParserFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      parserFilter === 'all'
+                        ? 'bg-purple-700 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Tất Cả ({parsedResult.allQuestions.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setParserFilter('I')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      parserFilter === 'I'
+                        ? 'bg-sky-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400'
+                    }`}
+                  >
+                    Phần I: Trắc Nghiệm ({parsedResult.part1Questions.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setParserFilter('II')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      parserFilter === 'II'
+                        ? 'bg-amber-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400'
+                    }`}
+                  >
+                    Phần II: Đúng / Sai ({parsedResult.part2Questions.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setParserFilter('III')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      parserFilter === 'III'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400'
+                    }`}
+                  >
+                    Phần III: TLN ({parsedResult.part3Questions.length})
+                  </button>
+                </div>
+
+                {/* Batch Actions & Create Button */}
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSelectAll(true)}
+                    className="text-xs text-purple-600 dark:text-purple-400 hover:underline font-bold cursor-pointer"
+                  >
+                    Chọn tất cả
+                  </button>
+                  <span className="text-slate-300 dark:text-slate-700">|</span>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSelectAll(false)}
+                    className="text-xs text-slate-500 hover:underline font-semibold cursor-pointer"
+                  >
+                    Bỏ chọn
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCreateExamFromParsed}
+                    disabled={parsedResult.allQuestions.filter(q => q.isSelected).length === 0}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 disabled:opacity-40 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer hover:scale-105"
+                  >
+                    <BookCheck className="w-4 h-4 text-amber-300" />
+                    <span>
+                      Tạo Đề Mới & Lưu Vào Ngân Hàng ({parsedResult.allQuestions.filter(q => q.isSelected).length} câu)
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Filtered Question Cards */}
+              <div className="space-y-4">
+                {parsedResult.allQuestions
+                  .filter(q => {
+                    if (parserFilter === 'all') return true;
+                    return q.part === parserFilter;
+                  })
+                  .map(q => {
+                    return (
+                      <div
+                        key={q.id}
+                        className={`p-5 rounded-2xl border transition-all ${
+                          q.isSelected
+                            ? 'bg-white dark:bg-slate-900 border-purple-400 dark:border-purple-600 shadow-sm'
+                            : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 opacity-60'
+                        }`}
+                      >
+                        {/* Header bar of question */}
+                        <div className="flex items-start justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleQuestionSelection(q.id)}
+                              className="text-purple-600 dark:text-purple-400 cursor-pointer transition-transform hover:scale-110"
+                            >
+                              {q.isSelected ? (
+                                <CheckSquare className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                              ) : (
+                                <Square className="w-5 h-5 text-slate-400" />
+                              )}
+                            </button>
+
+                            <span className="font-heading font-extrabold text-sm text-slate-900 dark:text-white">
+                              Câu {q.id}
+                            </span>
+
+                            {/* Part Badge */}
+                            {q.part === 'I' && (
+                              <span className="px-2.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 text-[10px] font-bold border border-sky-300/60 dark:border-sky-800">
+                                Phần I: Trắc nghiệm 4 lựa chọn
+                              </span>
+                            )}
+                            {q.part === 'II' && (
+                              <span className="px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 text-[10px] font-bold border border-amber-300/60 dark:border-amber-800">
+                                Phần II: Đúng / Sai 4 ý
+                              </span>
+                            )}
+                            {q.part === 'III' && (
+                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold border border-emerald-300/60 dark:border-emerald-800">
+                                Phần III: Trả lời ngắn (TLN)
+                              </span>
+                            )}
+
+                            {/* Difficulty */}
+                            <span className="px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 text-[10px] font-semibold">
+                              {q.difficulty}
+                            </span>
+                          </div>
+
+                          <div className="text-[11px] font-mono text-slate-400">
+                            {q.subject} • Lớp 12
+                          </div>
+                        </div>
+
+                        {/* Question Content */}
+                        <div className="py-3.5 text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
+                          {q.content}
+                        </div>
+
+                        {/* Render Options for Part I */}
+                        {q.part === 'I' && q.options && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 pb-3">
+                            {q.options.map(opt => {
+                              const isCorrect = opt.key === q.correctAnswer;
+                              return (
+                                <div
+                                  key={opt.key}
+                                  className={`p-2.5 rounded-xl border text-xs flex items-center gap-2.5 ${
+                                    isCorrect
+                                      ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold'
+                                      : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                                  }`}
+                                >
+                                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                                    isCorrect ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                                  }`}>
+                                    {opt.key}
+                                  </span>
+                                  <span>{opt.label}</span>
+                                  {isCorrect && (
+                                    <span className="ml-auto text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                                      Đáp án đúng
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Render Sub-items for Part II */}
+                        {q.part === 'II' && q.subItems && (
+                          <div className="space-y-2 pt-1 pb-3">
+                            {q.subItems.map(item => (
+                              <div
+                                key={item.key}
+                                className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 text-xs"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-slate-900 dark:text-white font-mono">
+                                    {item.key})
+                                  </span>
+                                  <span className="text-slate-800 dark:text-slate-200">
+                                    {item.statement}
+                                  </span>
+                                </div>
+                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase shrink-0 ${
+                                  item.correctBool
+                                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                                    : 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
+                                }`}>
+                                  {item.correctBool ? '✓ ĐÚNG' : '✗ SAI'}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Render Answer for Part III */}
+                        {q.part === 'III' && (
+                          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs flex items-center justify-between gap-2 mb-3">
+                            <span className="font-semibold text-emerald-900 dark:text-emerald-200">
+                              Đáp số trả lời ngắn (chấm tự động):
+                            </span>
+                            <span className="px-3 py-1 rounded-lg bg-emerald-600 text-white font-mono font-black text-xs shadow-xs">
+                              {q.correctAnswerText || 'Chưa xác định'}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Explanation & Reasoning */}
+                        {q.explanation && (
+                          <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-900/60 text-xs space-y-1">
+                            <div className="font-bold text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                              <span>Lời giải & Tư duy phân hoá:</span>
+                            </div>
+                            <div className="text-slate-700 dark:text-slate-300 leading-relaxed font-mono text-[11px]">
+                              {q.explanation}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

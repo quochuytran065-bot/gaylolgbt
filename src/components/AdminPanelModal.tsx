@@ -56,7 +56,7 @@ const SUBJECT_OPTIONS: Subject[] = [
   'Toán học', 'Vật lý', 'Hóa học', 'Sinh học', 'Tiếng Anh', 'Ngữ văn', 'Lịch sử', 'Tin học',
 ];
 
-const GRADE_OPTIONS: GradeLevel[] = ['Lớp 10', 'Lớp 11', 'Lớp 12', 'Đại học'];
+const GRADE_OPTIONS: GradeLevel[] = ['Lớp 12', 'Đại học'];
 
 // ─── Sub-forms ───────────────────────────────────────────────────
 

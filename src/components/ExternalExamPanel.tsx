@@ -69,7 +69,7 @@ const EXAM_TYPE_OPTIONS: ExamCategoryType[] = [
   'Thi HSG',
 ];
 
-const GRADE_LIST = ['Tất cả lớp', 'Lớp 10', 'Lớp 11', 'Lớp 12'] as const;
+const GRADE_LIST = ['Tất cả lớp', 'Lớp 12'] as const;
 
 const SUBJECT_LIST = [
   'Tất cả môn',

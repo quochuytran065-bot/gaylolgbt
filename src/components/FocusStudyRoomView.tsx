@@ -10,12 +10,14 @@ import {
   Camera,
   CameraOff,
   Sparkles,
-  Coffee,
   CheckCircle2,
   Headphones,
   Maximize2,
   X,
-  Bell
+  Bell,
+  RefreshCw,
+  AlertCircle,
+  Video
 } from 'lucide-react';
 import { FocusParticipant, AmbientSoundType } from '../types';
 import { INITIAL_FOCUS_PARTICIPANTS } from '../data/learningPlatformData';
@@ -27,28 +29,38 @@ export const FocusStudyRoomView: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [sessionsCompleted, setSessionsCompleted] = useState(3);
   
-  // In-app Notification instead of blocking window.alert
+  // In-app Notification
   const [bannerNotification, setBannerNotification] = useState<{
     title: string;
     message: string;
     icon: 'success' | 'break';
   } | null>(null);
 
-  // Ambient Sound State
+  // ── Ambient Sound Engine State ─────────────────────────────────────
   const [selectedSound, setSelectedSound] = useState<AmbientSoundType>('lofi');
-  const [isMuted, setIsMuted] = useState(true);
+  const [isAudioPlaying, setIsAudioPlaying] = useState<boolean>(false);
+  const [volume, setVolume] = useState<number>(0.5); // 0.0 - 1.0
+  
+  // Web Audio Context & Node Refs
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const activeSourcesRef = useRef<AudioNode[]>([]);
+  const gainNodeRef = useRef<GainNode | null>(null);
+  const audioIntervalRef = useRef<number | null>(null);
+
+  // ── Webcam Video State ─────────────────────────────────────────────
+  const [isCamActive, setIsCamActive] = useState<boolean>(false);
+  const [camFacingMode, setCamFacingMode] = useState<'user' | 'environment'>('user');
+  const [camErrorMessage, setCamErrorMessage] = useState<string | null>(null);
+  const [isFullscreenCam, setIsFullscreenCam] = useState<boolean>(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   
   // User Focus Task
   const [userTask, setUserTask] = useState('Ôn tập 50 câu trắc nghiệm Toán 12');
   const [isEditingTask, setIsEditingTask] = useState(false);
-  const [userCamOn, setUserCamOn] = useState(true);
 
   // Participants
-  const [participants, setParticipants] = useState<FocusParticipant[]>(INITIAL_FOCUS_PARTICIPANTS);
-
-  // Web Audio Noise Generator (Filtered soothing noise for focus)
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const noiseSourceRef = useRef<AudioNode | null>(null);
+  const [participants] = useState<FocusParticipant[]>(INITIAL_FOCUS_PARTICIPANTS);
 
   // Switch pomodoro modes
   const handleSwitchMode = (newMode: 'focus' | 'shortBreak' | 'longBreak') => {
@@ -91,55 +103,326 @@ export const FocusStudyRoomView: React.FC = () => {
     return () => clearInterval(timer);
   }, [isRunning, timeLeft, mode]);
 
-  // Audio Ambient sound simulation (Synthesizer via Web Audio API)
-  useEffect(() => {
-    if (!isRunning || isMuted || selectedSound === 'silence') {
-      if (audioContextRef.current && audioContextRef.current.state === 'running') {
-        audioContextRef.current.suspend();
-      }
+  // ═══════════════════════════════════════════════════════════════════
+  // WEB AUDIO ENGINE: REAL AMBIENT FOCUS SOUNDS
+  // ═══════════════════════════════════════════════════════════════════
+
+  // Clean up all currently playing nodes
+  const stopAllAudioNodes = () => {
+    if (audioIntervalRef.current) {
+      window.clearInterval(audioIntervalRef.current);
+      audioIntervalRef.current = null;
+    }
+    activeSourcesRef.current.forEach(node => {
+      try {
+        if ('stop' in node && typeof (node as AudioScheduledSourceNode).stop === 'function') {
+          (node as AudioScheduledSourceNode).stop();
+        }
+        node.disconnect();
+      } catch { /* noop */ }
+    });
+    activeSourcesRef.current = [];
+  };
+
+  const getAudioContext = () => {
+    if (!audioContextRef.current) {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      audioContextRef.current = new AudioCtx();
+    }
+    if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume();
+    }
+    return audioContextRef.current;
+  };
+
+  // Build audio synthesizer according to chosen soundscape
+  const startAmbientAudio = (sound: AmbientSoundType) => {
+    stopAllAudioNodes();
+    if (sound === 'silence') {
+      setIsAudioPlaying(false);
       return;
     }
 
     try {
-      if (!audioContextRef.current) {
-        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        const ctx = new AudioCtx();
-        audioContextRef.current = ctx;
+      const ctx = getAudioContext();
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(volume, ctx.currentTime);
+      masterGain.connect(ctx.destination);
+      gainNodeRef.current = masterGain;
 
-        // Generate 5s buffer of soothing ambient noise
+      if (sound === 'lofi') {
+        // LO-FI: Soft soothing chord progression generator (Emaj9 -> C#m7 -> Aadd9)
+        const chordNotes = [
+          [164.81, 196.00, 246.94, 293.66], // E3, G3, B3, D4
+          [138.59, 164.81, 207.65, 246.94], // C#3, E3, G#3, B3
+          [110.00, 164.81, 220.00, 277.18], // A2, E3, A3, C#4
+          [123.47, 185.00, 220.00, 293.66], // B2, F#3, A3, D4
+        ];
+        let chordIndex = 0;
+
+        const playLofiChord = () => {
+          if (!audioContextRef.current || audioContextRef.current.state !== 'running') return;
+          const notes = chordNotes[chordIndex % chordNotes.length];
+          chordIndex++;
+
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const noteGain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+
+            osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(450 + idx * 80, ctx.currentTime);
+
+            const now = ctx.currentTime;
+            noteGain.gain.setValueAtTime(0.001, now);
+            noteGain.gain.exponentialRampToValueAtTime(0.06, now + 0.4);
+            noteGain.gain.exponentialRampToValueAtTime(0.001, now + 3.8);
+
+            osc.connect(filter);
+            filter.connect(noteGain);
+            noteGain.connect(masterGain);
+
+            osc.start(now);
+            osc.stop(now + 4.0);
+            activeSourcesRef.current.push(osc);
+          });
+        };
+
+        // Play initial chord and loop every 4.2 seconds
+        playLofiChord();
+        audioIntervalRef.current = window.setInterval(playLofiChord, 4200);
+
+        // Add soft vinyl crackle noise
+        const crackleBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+        const data = crackleBuffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+          data[i] = Math.random() < 0.004 ? (Math.random() * 2 - 1) * 0.15 : (Math.random() * 2 - 1) * 0.008;
+        }
+        const crackle = ctx.createBufferSource();
+        crackle.buffer = crackleBuffer;
+        crackle.loop = true;
+        const crackleFilter = ctx.createBiquadFilter();
+        crackleFilter.type = 'bandpass';
+        crackleFilter.frequency.value = 1200;
+        crackle.connect(crackleFilter);
+        crackleFilter.connect(masterGain);
+        crackle.start();
+        activeSourcesRef.current.push(crackle);
+
+      } else if (sound === 'rain') {
+        // RAIN: Continuous gentle pink noise + droplets
+        const bufferSize = ctx.sampleRate * 3;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99886 * b0 + white * 0.0555179;
+          b1 = 0.99332 * b1 + white * 0.0750759;
+          b2 = 0.96900 * b2 + white * 0.1538520;
+          b3 = 0.86650 * b3 + white * 0.3104856;
+          b4 = 0.55000 * b4 + white * 0.5329522;
+          b5 = -0.7616 * b5 - white * 0.0168980;
+          data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.035;
+          b6 = white * 0.115926;
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        noise.loop = true;
+
+        const lowpass = ctx.createBiquadFilter();
+        lowpass.type = 'lowpass';
+        lowpass.frequency.value = 850;
+
+        noise.connect(lowpass);
+        lowpass.connect(masterGain);
+        noise.start();
+        activeSourcesRef.current.push(noise);
+
+      } else if (sound === 'cafe') {
+        // CAFE: Warm ambient cafe room reverberation
         const bufferSize = ctx.sampleRate * 4;
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
         let lastOut = 0.0;
         for (let i = 0; i < bufferSize; i++) {
           const white = Math.random() * 2 - 1;
-          lastOut = (lastOut + 0.02 * white) / 1.02; // Brown/pink filter
-          data[i] = lastOut * 0.15;
+          lastOut = (lastOut + 0.04 * white) / 1.04;
+          data[i] = lastOut * 0.1;
         }
-
         const noise = ctx.createBufferSource();
         noise.buffer = buffer;
         noise.loop = true;
 
         const filter = ctx.createBiquadFilter();
         filter.type = 'lowpass';
-        filter.frequency.value = 500;
-
-        const gainNode = ctx.createGain();
-        gainNode.gain.value = 0.12;
+        filter.frequency.value = 400;
 
         noise.connect(filter);
-        filter.connect(gainNode);
-        gainNode.connect(ctx.destination);
-        noise.start(0);
-        noiseSourceRef.current = noise;
+        filter.connect(masterGain);
+        noise.start();
+        activeSourcesRef.current.push(noise);
+
+      } else if (sound === 'waves') {
+        // WAVES: Periodic surging ocean waves with oscillating filter
+        const bufferSize = ctx.sampleRate * 4;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * 0.08;
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        noise.loop = true;
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(250, ctx.currentTime);
+        filter.Q.value = 2.0;
+
+        // Modulate filter frequency slowly like ocean waves (0.15 Hz LFO)
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        lfo.frequency.value = 0.16;
+        lfoGain.gain.value = 220;
+        lfo.connect(lfoGain);
+        lfoGain.connect(filter.frequency);
+        lfo.start();
+
+        noise.connect(filter);
+        filter.connect(masterGain);
+        noise.start();
+        activeSourcesRef.current.push(noise, lfo);
       }
 
-      if (audioContextRef.current.state === 'suspended') {
-        audioContextRef.current.resume();
+      setIsAudioPlaying(true);
+    } catch (err) {
+      console.warn('Audio synthesis initialisation error:', err);
+      setIsAudioPlaying(false);
+    }
+  };
+
+  // Adjust volume dynamically
+  useEffect(() => {
+    if (gainNodeRef.current && audioContextRef.current) {
+      gainNodeRef.current.gain.setValueAtTime(volume, audioContextRef.current.currentTime);
+    }
+  }, [volume]);
+
+  // Clean up audio on unmount
+  useEffect(() => {
+    return () => {
+      stopAllAudioNodes();
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        try { audioContextRef.current.close(); } catch { /* noop */ }
       }
-    } catch { /* Audio not supported */ }
-  }, [isRunning, isMuted, selectedSound]);
+    };
+  }, []);
+
+  const handleToggleAudio = () => {
+    if (isAudioPlaying) {
+      stopAllAudioNodes();
+      setIsAudioPlaying(false);
+    } else {
+      startAmbientAudio(selectedSound);
+    }
+  };
+
+  const handleSelectSound = (sound: AmbientSoundType) => {
+    setSelectedSound(sound);
+    startAmbientAudio(sound);
+  };
+
+  // ═══════════════════════════════════════════════════════════════════
+  // WEBCAM CAMERA ENGINE: REAL HARDWARE CAMERA STREAM
+  // ═══════════════════════════════════════════════════════════════════
+
+  const stopWebcam = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => {
+        track.stop();
+      });
+      mediaStreamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsCamActive(false);
+  };
+
+  const startWebcam = async (facing: 'user' | 'environment' = camFacingMode) => {
+    stopWebcam();
+    setCamErrorMessage(null);
+
+    // Verify browser mediaDevices support
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCamErrorMessage('Trình duyệt hiện tại không hỗ trợ webcam hoặc đang chạy trong ngữ cảnh bảo mật không phù hợp (cần HTTPS/localhost).');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: facing,
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
+        audio: false
+      });
+
+      mediaStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(e => console.warn('Video play error:', e));
+      }
+      setIsCamActive(true);
+      setCamFacingMode(facing);
+    } catch (err: unknown) {
+      const error = err as { name?: string; message?: string };
+      console.error('Camera access failed:', error);
+      setIsCamActive(false);
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        setCamErrorMessage('Quyền truy cập Camera bị từ chối. Vui lòng bấm vào biểu tượng ổ khóa / camera trên thanh địa chỉ trình duyệt và chọn "Cho phép" (Allow).');
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        setCamErrorMessage('Không tìm thấy thiết bị Webcam trên máy tính hoặc camera đang bị ứng dụng khác (Zoom, Meet, v.v.) chiếm dụng.');
+      } else {
+        setCamErrorMessage(`Không thể bật camera: ${error.message || 'Lỗi không xác định'}. Vui lòng kiểm tra lại thiết bị.`);
+      }
+    }
+  };
+
+  const handleToggleCam = () => {
+    if (isCamActive) {
+      stopWebcam();
+    } else {
+      startWebcam(camFacingMode);
+    }
+  };
+
+  const handleFlipCam = () => {
+    const nextFacing = camFacingMode === 'user' ? 'environment' : 'user';
+    startWebcam(nextFacing);
+  };
+
+  // Re-attach video stream whenever videoRef attaches (e.g. after render or mode change)
+  useEffect(() => {
+    if (isCamActive && mediaStreamRef.current && videoRef.current) {
+      if (videoRef.current.srcObject !== mediaStreamRef.current) {
+        videoRef.current.srcObject = mediaStreamRef.current;
+        videoRef.current.play().catch(() => {/* noop */});
+      }
+    }
+  }, [isCamActive]);
+
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      stopWebcam();
+    };
+  }, []);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -167,10 +450,10 @@ export const FocusStudyRoomView: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold font-heading leading-tight">
-                Phòng Tự Học Chung (Focus Room)
+                Phòng Tự Học Chung (Focus Room 2026)
               </h1>
               <p className="text-xs sm:text-sm text-teal-100/90 leading-relaxed max-w-2xl mt-1">
-                Ứng dụng kỹ thuật Pomodoro khoa học kết hợp âm thanh kích thích sóng não tập trung. Học cùng các bạn học sinh khắp 63 tỉnh thành để xua tan cảm giác trì hoãn.
+                Ứng dụng kỹ thuật Pomodoro khoa học kết hợp âm thanh kích thích sóng não tập trung và Webcam học tập thời gian thực. Cùng các sĩ tử 2008 & 2007 nỗ lực bứt phá mục tiêu điểm 9+!
               </p>
             </div>
 
@@ -207,10 +490,26 @@ export const FocusStudyRoomView: React.FC = () => {
         </div>
       )}
 
+      {/* ── Camera Error Alert (If Any) ────────────────────────── */}
+      {camErrorMessage && (
+        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 flex items-center justify-between gap-3 animate-in fade-in duration-200 text-xs">
+          <div className="flex items-center gap-2.5 text-rose-800 dark:text-rose-200">
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+            <p>{camErrorMessage}</p>
+          </div>
+          <button
+            onClick={() => setCamErrorMessage(null)}
+            className="p-1 rounded-lg text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/60 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* ── Main Workspace Grid ───────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left Column: Pomodoro Timer & Controls (7 cols) */}
+        {/* Left Column: Pomodoro Timer & Ambient Sounds (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
           
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 shadow-xs flex flex-col items-center justify-center text-center space-y-6 relative overflow-hidden transition-colors">
@@ -286,7 +585,13 @@ export const FocusStudyRoomView: React.FC = () => {
             {/* Timer Actions */}
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setIsRunning(!isRunning)}
+                onClick={() => {
+                  const nextRunning = !isRunning;
+                  setIsRunning(nextRunning);
+                  if (nextRunning && !isAudioPlaying && selectedSound !== 'silence') {
+                    startAmbientAudio(selectedSound);
+                  }
+                }}
                 className={`px-8 py-3.5 rounded-2xl text-white font-bold text-sm shadow-md active:scale-95 transition-all cursor-pointer flex items-center gap-2 ${
                   isRunning
                     ? 'bg-amber-600 hover:bg-amber-700'
@@ -309,107 +614,238 @@ export const FocusStudyRoomView: React.FC = () => {
             {/* Sessions count */}
             <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 font-medium">
               <CheckCircle2 className="w-4 h-4 text-teal-500" />
-              <span>Hôm nay bạn đã hoàn thành: <strong className="text-slate-700 dark:text-slate-300">{sessionsCompleted} phiên Pomodoro</strong> (75 phút)</span>
+              <span>Hôm nay bạn đã hoàn thành: <strong className="text-slate-700 dark:text-slate-300">{sessionsCompleted} phiên Pomodoro</strong> ({sessionsCompleted * 25} phút)</span>
             </div>
           </div>
 
-          {/* Ambient Sound Selector */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3 transition-colors">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
-                <Headphones className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                Âm Thanh Nền Kích Thích Tập Trung
-              </h4>
-              <button
-                onClick={() => setIsMuted(!isMuted)}
-                className={`text-xs flex items-center gap-1 font-semibold cursor-pointer ${
-                  isMuted ? 'text-rose-500' : 'text-teal-600'
-                }`}
-              >
-                {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-                <span>{isMuted ? 'Đã tắt âm' : 'Đang bật âm'}</span>
-              </button>
-            </div>
+          {/* ── Ambient Sound Selector & Real Web Audio Player ─────── */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4 transition-colors">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+                  isAudioPlaying ? 'bg-teal-500/20 text-teal-600 dark:text-teal-400 animate-pulse' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                }`}>
+                  <Headphones className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
+                    Âm Thanh Nền Tập Trung (Web Audio API)
+                  </h4>
+                  <p className="text-[11px] text-slate-400">
+                    {isAudioPlaying ? '🎵 Đang phát trực tiếp từ bộ tổng hợp âm thanh' : '🔇 Đang tạm dừng phát âm thanh'}
+                  </p>
+                </div>
+              </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-semibold">
-              {[
-                { id: 'lofi', label: '🎵 Lo-Fi Chill', icon: '🎧' },
-                { id: 'rain', label: '🌧️ Mưa êm dịu', icon: '🌧️' },
-                { id: 'cafe', label: '☕ Quán Cà Phê', icon: '☕' },
-                { id: 'waves', label: '🌊 Sóng biển', icon: '🌊' },
-              ].map(s => (
+              {/* Master Play/Mute & Volume */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl">
+                  <Volume2 className="w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={volume}
+                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                    className="w-20 sm:w-24 accent-teal-600 h-1.5 cursor-pointer"
+                    title={`Âm lượng: ${Math.round(volume * 100)}%`}
+                  />
+                  <span className="text-[10px] font-mono text-slate-500 font-bold">{Math.round(volume * 100)}%</span>
+                </div>
+
                 <button
-                  key={s.id}
-                  onClick={() => { setSelectedSound(s.id as AmbientSoundType); setIsMuted(false); }}
-                  className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
-                    selectedSound === s.id && !isMuted
-                      ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-500 text-teal-800 dark:text-teal-200 shadow-xs'
-                      : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                  onClick={handleToggleAudio}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+                    isAudioPlaying
+                      ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
+                      : 'bg-teal-600 text-white hover:bg-teal-700 shadow-xs'
                   }`}
                 >
-                  <span className="block text-lg mb-1">{s.icon}</span>
-                  <span className="text-[11px]">{s.label}</span>
+                  {isAudioPlaying ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                  <span>{isAudioPlaying ? 'Tắt âm' : 'Bật âm'}</span>
                 </button>
-              ))}
+              </div>
+            </div>
+
+            {/* Sound Preset Buttons */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-semibold">
+              {[
+                { id: 'lofi', label: 'Lo-Fi Piano', icon: '🎧', desc: 'Hợp âm êm dịu' },
+                { id: 'rain', label: 'Mưa Êm Đêm', icon: '🌧️', desc: 'Tiếng mưa rơi nhẹ' },
+                { id: 'cafe', label: 'Quán Cà Phê', icon: '☕', desc: 'Không gian ấm cúng' },
+                { id: 'waves', label: 'Sóng Biển', icon: '🌊', desc: 'Nhịp thở biển khơi' },
+              ].map(s => {
+                const isSelected = selectedSound === s.id && isAudioPlaying;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => handleSelectSound(s.id as AmbientSoundType)}
+                    className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer relative group ${
+                      isSelected
+                        ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-500 text-teal-900 dark:text-teal-200 shadow-sm ring-1 ring-teal-500'
+                        : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    }`}
+                  >
+                    {isSelected && (
+                      <span className="absolute top-2 right-2 flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                      </span>
+                    )}
+                    <span className="block text-2xl mb-1.5 transform group-hover:scale-110 transition-transform">{s.icon}</span>
+                    <span className="block font-bold text-xs">{s.label}</span>
+                    <span className="text-[10px] text-slate-400 block mt-0.5">{s.desc}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
         </div>
 
-        {/* Right Column: Study Together Virtual Room (5 cols) */}
+        {/* Right Column: Real Webcam Feed & Virtual Study Together (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
           
-          {/* User's own focus card & task */}
-          <div className="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-slate-900 dark:to-slate-900/80 rounded-3xl border border-teal-200 dark:border-slate-800 p-5 space-y-3 transition-colors">
+          {/* ── User's Own Camera & Focus Card ────────────────────── */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 space-y-4 shadow-xs transition-colors">
+            
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Nhiệm vụ phiên học này
+              <span className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                <Video className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                Webcam Của Bạn
               </span>
-              <button
-                onClick={() => setUserCamOn(!userCamOn)}
-                title={userCamOn ? 'Tắt camera mô phỏng' : 'Bật camera mô phỏng'}
-                className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 hover:text-teal-600 dark:hover:text-teal-400 cursor-pointer"
-              >
-                {userCamOn ? <Camera className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" /> : <CameraOff className="w-3.5 h-3.5" />}
-                <span>{userCamOn ? 'Cam Bật' : 'Cam Tắt'}</span>
-              </button>
-            </div>
 
-            {isEditingTask ? (
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={userTask}
-                  onChange={(e) => setUserTask(e.target.value)}
-                  className="flex-1 p-2 text-xs rounded-xl border border-teal-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-1 focus:ring-teal-500"
-                />
+              <div className="flex items-center gap-1.5">
+                {isCamActive && (
+                  <>
+                    <button
+                      onClick={handleFlipCam}
+                      title="Đổi camera trước / sau"
+                      className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer text-xs"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setIsFullscreenCam(!isFullscreenCam)}
+                      title="Mở rộng khung camera"
+                      className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer text-xs"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                )}
+
                 <button
-                  onClick={() => setIsEditingTask(false)}
-                  className="px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors"
+                  onClick={handleToggleCam}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    isCamActive
+                      ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
+                      : 'bg-teal-600 text-white hover:bg-teal-700 shadow-xs'
+                  }`}
                 >
-                  Lưu
+                  {isCamActive ? <CameraOff className="w-3.5 h-3.5" /> : <Camera className="w-3.5 h-3.5" />}
+                  <span>{isCamActive ? 'Tắt Cam' : 'Bật Webcam Thật'}</span>
                 </button>
               </div>
-            ) : (
-              <div 
-                onClick={() => setIsEditingTask(true)}
-                className="p-3 bg-white dark:bg-slate-800/80 rounded-2xl border border-teal-100 dark:border-slate-800 text-xs font-medium text-slate-800 dark:text-slate-200 flex items-center justify-between cursor-pointer hover:border-teal-300 dark:hover:border-slate-700 transition-colors"
-              >
-                <span>🎯 {userTask}</span>
-                <span className="text-[10px] text-teal-600 dark:text-teal-400 underline">Đổi</span>
+            </div>
+
+            {/* Video Viewport */}
+            <div className={`relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 transition-all ${
+              isFullscreenCam ? 'h-80 sm:h-96' : 'h-52 sm:h-60'
+            }`}>
+              {/* Actual Video Element */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className={`w-full h-full object-cover transition-opacity duration-300 ${
+                  isCamActive ? 'opacity-100 transform -scale-x-100' : 'opacity-0 absolute pointer-events-none'
+                }`}
+              />
+
+              {/* Inactive State Avatar & Guide */}
+              {!isCamActive && (
+                <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-slate-400 space-y-3">
+                  <div className="w-14 h-14 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-teal-400">
+                    <Camera className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-200">Camera đang tắt</h5>
+                    <p className="text-[11px] text-slate-400 mt-1 max-w-xs">
+                      Bấm nút <strong>"Bật Webcam Thật"</strong> ở trên để cho phép trình duyệt hiển thị camera học tập của bạn.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => startWebcam()}
+                    className="px-4 py-2 rounded-xl bg-teal-600/90 hover:bg-teal-600 text-white text-xs font-bold cursor-pointer transition-all shadow-xs"
+                  >
+                    Bật Camera Ngay
+                  </button>
+                </div>
+              )}
+
+              {/* Active Badges Overlay */}
+              {isCamActive && (
+                <div className="absolute top-3 left-3 flex items-center gap-2">
+                  <span className="px-2.5 py-1 rounded-full bg-rose-600/90 text-white font-bold text-[10px] uppercase tracking-wider backdrop-blur-md flex items-center gap-1.5 shadow-md">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> TRỰC TIẾP (LIVE)
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-black/60 text-slate-300 font-mono text-[10px] backdrop-blur-md">
+                    HD 720p · 30fps
+                  </span>
+                </div>
+              )}
+
+              {/* Task Tag at bottom of video */}
+              <div className="absolute bottom-2 left-2 right-2 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-white text-xs flex items-center justify-between border border-white/10">
+                <span className="truncate max-w-[200px] text-[11px]">🎯 {userTask}</span>
+                <span className="text-[10px] text-emerald-400 font-bold font-mono">Đang tập trung</span>
               </div>
-            )}
+            </div>
+
+            {/* Task Edit Area */}
+            <div className="pt-1">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
+                Mục tiêu cần hoàn thành trong phiên này:
+              </span>
+              {isEditingTask ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={userTask}
+                    onChange={(e) => setUserTask(e.target.value)}
+                    className="flex-1 p-2 text-xs rounded-xl border border-teal-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-1 focus:ring-teal-500"
+                  />
+                  <button
+                    onClick={() => setIsEditingTask(false)}
+                    className="px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors"
+                  >
+                    Lưu
+                  </button>
+                </div>
+              ) : (
+                <div 
+                  onClick={() => setIsEditingTask(true)}
+                  className="p-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-800 dark:text-slate-200 flex items-center justify-between cursor-pointer hover:border-teal-400 transition-colors"
+                >
+                  <span className="truncate">{userTask}</span>
+                  <span className="text-[10px] text-teal-600 dark:text-teal-400 underline shrink-0 ml-2">Đổi mục tiêu</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Virtual Participants List (Study Together) */}
+          {/* ── Virtual Participants List (Study Together) ────────── */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4 transition-colors">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
                 <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 Bạn Học Cùng Phòng Đang Online
               </h4>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Trực tuyến
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> 48 bạn đang học
               </span>
             </div>
 
@@ -437,8 +873,8 @@ export const FocusStudyRoomView: React.FC = () => {
               ))}
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-center text-xs text-slate-500 dark:text-slate-400">
-              💡 <em>"Nhìn thấy những bạn khác đang nỗ lực chăm chỉ sẽ giúp bạn duy trì kỷ luật và không từ bỏ!"</em>
+            <div className="p-3.5 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/60 text-center text-xs text-teal-800 dark:text-teal-200">
+              💡 <em>"Mỗi phút bạn tập trung kiên trì hôm nay là một bước tiến gần hơn đến cánh cổng trường Đại học mơ ước!"</em>
             </div>
           </div>
 

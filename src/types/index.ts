@@ -14,8 +14,6 @@ export type Subject =
 
 export type GradeLevel = 
   | 'Tất cả lớp'
-  | 'Lớp 10'
-  | 'Lớp 11'
   | 'Lớp 12'
   | 'Đại học';
 

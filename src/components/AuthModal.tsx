@@ -371,7 +371,7 @@ export const AuthModal: React.FC = () => {
                     className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-left cursor-pointer transition-colors"
                   >
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Lê Thu Hà</p>
-                    <p className="text-[10px] text-slate-500">Lớp 11 · THPT Chuyên KHTN</p>
+                    <p className="text-[10px] text-slate-500">Lớp 12 · THPT Chuyên KHTN</p>
                   </button>
                 </div>
               </div>
@@ -403,10 +403,8 @@ export const AuthModal: React.FC = () => {
                     onChange={(e) => setRegGrade(e.target.value)}
                     className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-600 text-slate-900 dark:text-white font-medium"
                   >
-                    <option value="Lớp 10">Lớp 10</option>
-                    <option value="Lớp 11">Lớp 11</option>
-                    <option value="Lớp 12">Lớp 12 (Ôn thi THPT)</option>
-                    <option value="Đại học">Đại học / Tự do</option>
+                    <option value="Lớp 12">Lớp 12 (Ôn thi THPT Quốc Gia)</option>
+                    <option value="Đại học">Đại học / Thí sinh tự do</option>
                   </select>
                 </div>
                 <div>

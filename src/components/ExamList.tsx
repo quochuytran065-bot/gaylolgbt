@@ -62,8 +62,6 @@ const SUBJECT_OPTIONS: Subject[] = [
 
 const GRADE_OPTIONS: GradeLevel[] = [
   'Tất cả lớp',
-  'Lớp 10',
-  'Lớp 11',
   'Lớp 12'
 ];
 

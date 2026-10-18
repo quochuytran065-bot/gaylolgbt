@@ -33,8 +33,8 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({ docume
   // Lock body scroll and handle Escape key
   useEffect(() => {
     if (!document) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const originalOverflow = window.document.body.style.overflow;
+    window.document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -42,7 +42,7 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({ docume
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      document.body.style.overflow = originalOverflow;
+      window.document.body.style.overflow = originalOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [document, onClose]);

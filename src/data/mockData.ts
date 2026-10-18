@@ -1,5 +1,6 @@
 import { DocumentItem, Exam, StudyGoal, DailyStats, SubjectOverview, User } from '../types';
 import { ALL_BGD_EXAMS } from './bgdExamBank';
+import { ALL_AZOTA_GRADE12_EXAMS } from './azotaGrade12Bank';
 import heroImg from '../assets/images/hero_digital_learning_1790863793186.jpg';
 import stemImg from '../assets/images/cover_stem_study_1790863805933.jpg';
 import humanitiesImg from '../assets/images/cover_humanities_study_1790863821410.jpg';
@@ -234,11 +235,11 @@ export const INITIAL_DOCUMENTS: DocumentItem[] = [
     }
   },
   {
-    id: 'doc-hoa-11-04',
-    title: 'Sơ Đồ Tư Duy Hóa Học Vô Cơ & Hữu Cơ Lớp 11 (Chương Trình Mới)',
-    description: 'Khái quát chuyên đề Cân bằng hóa học, Sự điện ly, Nitơ - Photpho, Carbon - Silic và Đại cương hóa học hữu cơ Hydrocarbon.',
+    id: 'doc-hoa-12-04',
+    title: 'Sơ Đồ Tư Duy Hóa Học Vô Cơ & Hữu Cơ Lớp 12 (Chương Trình Mới)',
+    description: 'Khái quát toàn diện chuyên đề Este - Lipid, Carbohydrate, Amin - Peptide, Polime, Pin điện hóa và Phức chất chuyển tiếp.',
     subject: 'Hóa học',
-    grade: 'Lớp 11',
+    grade: 'Lớp 12',
     fileType: 'pdf',
     fileSize: '3.8 MB',
     pageCount: 32,
@@ -361,6 +362,7 @@ export const INITIAL_DOCUMENTS: DocumentItem[] = [
 ];
 
 export const INITIAL_EXAMS: Exam[] = [
+  ...ALL_AZOTA_GRADE12_EXAMS,
   ...ALL_BGD_EXAMS,
   {
     id: 'exam-toan-mini-01',
@@ -1169,11 +1171,11 @@ export const INITIAL_EXAMS: Exam[] = [
     ]
   },
   {
-    id: 'exam-hoa-11-04',
-    title: 'Trắc Nghiệm Hóa Học 11 - Cân Bằng Hóa Học & Phản Ứng Điện Ly',
-    description: '10 câu trắc nghiệm trọng tâm lý thuyết pH, thuyết Bronsted-Lowry, chuyển dịch cân bằng theo nguyên lý Le Chatelier.',
+    id: 'exam-hoa-12-04',
+    title: 'Trắc Nghiệm Hóa Học 12 - Đại Cương Este, Carbohydrate & Phức Chất',
+    description: '10 câu trắc nghiệm trọng tâm este, lipid, thuyết phức chất và nguyên lý Le Chatelier phân hóa cao.',
     subject: 'Hóa học',
-    grade: 'Lớp 11',
+    grade: 'Lớp 12',
     durationMinutes: 15,
     difficulty: 'Cơ bản',
     author: 'Cô Lê Hoàng Yến',
@@ -1296,10 +1298,10 @@ export const DEMO_USERS: User[] = [
     name: 'Trần Thị Thu Hà',
     email: 'thuha.tran@eduviet.vn',
     avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=thuha',
-    grade: 'Lớp 11',
+    grade: 'Lớp 12',
     school: 'THPT Chuyên Hà Nội - Amsterdam',
     role: 'student',
-    savedDocuments: ['doc-hoa-11-04'],
+    savedDocuments: ['doc-hoa-12-04'],
     createdAt: '2026-02-01'
   }
 ];

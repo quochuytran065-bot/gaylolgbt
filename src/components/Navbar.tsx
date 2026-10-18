@@ -489,7 +489,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                               : 'bg-slate-100 hover:bg-sky-50 hover:text-sky-700 text-slate-600'
                           }`}
                         >
-                          Lớp 11
+                          Lớp 12 Chuyên
                         </button>
                       </div>
 

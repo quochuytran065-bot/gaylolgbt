@@ -153,15 +153,16 @@ function MainApp() {
     setActiveExam(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     // Show score-based toast notification
-    const pct = Math.round((result.totalScore / result.maxScore) * 100);
+    const score = typeof result.score === 'number' ? result.score : 0;
+    const pct = Math.round((score / 10) * 100);
     if (pct >= 90) {
-      toast.achievement('🏆 Xuất sắc!', `Điểm ${result.totalScore.toFixed(2)}/${result.maxScore} — Top học sinh!`);
+      toast.achievement('🏆 Xuất sắc!', `Điểm ${score.toFixed(2)}/10 — Top học sinh!`);
     } else if (pct >= 70) {
-      toast.success('✅ Hoàn thành bài thi!', `Điểm ${result.totalScore.toFixed(2)}/${result.maxScore} — Tốt lắm!`);
+      toast.success('✅ Hoàn thành bài thi!', `Điểm ${score.toFixed(2)}/10 — Tốt lắm!`);
     } else if (pct >= 50) {
-      toast.info('📊 Kết quả bài thi', `Điểm ${result.totalScore.toFixed(2)}/${result.maxScore} — Cần ôn luyện thêm.`);
+      toast.info('📊 Kết quả bài thi', `Điểm ${score.toFixed(2)}/10 — Cần ôn luyện thêm.`);
     } else {
-      toast.warning('📚 Cần cố gắng hơn', `Điểm ${result.totalScore.toFixed(2)}/${result.maxScore} — Hãy làm bài chữa!`);
+      toast.warning('📚 Cần cố gắng hơn', `Điểm ${score.toFixed(2)}/10 — Hãy làm bài chữa!`);
     }
   };
 
