@@ -5,6 +5,8 @@ import { generateUniqueBGDExam, generateExamWithProfile, type ExamDifficultyProf
 import { ExternalExamPanel } from './ExternalExamPanel';
 import { AdvancedStudyView } from './AdvancedStudyView';
 import { HardcoreA00Section } from './HardcoreA00Section';
+import { AzotaFolderView } from './AzotaFolderView';
+import { autoSynthesizeAzotaExam } from '../services/azotaExamSynthesizer';
 import { 
   Clock, 
   HelpCircle, 
@@ -19,7 +21,8 @@ import {
   Globe,
   BookMarked,
   Flame,
-  FileCheck2
+  FileCheck2,
+  Folder
 } from 'lucide-react';
 
 /* Skeleton row for exam list */
@@ -46,7 +49,7 @@ const SkeletonExamRow = () => (
   </div>
 );
 
-export type ExamHubSubTab = 'exams' | 'courses' | 'hardcore' | 'external';
+export type ExamHubSubTab = 'azota_bank' | 'exams' | 'courses' | 'hardcore' | 'external';
 
 interface ExamListProps {
   exams: Exam[];
@@ -128,8 +131,21 @@ export const ExamList: React.FC<ExamListProps> = ({
   return (
     <div className="space-y-6">
 
-      {/* ── Unified Tab Switcher (Module Đề Thi & Chuyên Đề 9+) ────────────── */}
+      {/* ── Unified Tab Switcher (Module Đề Thi, Azota & Chuyên Đề 7-9+) ─────── */}
       <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl w-fit border border-slate-200/60 dark:border-slate-700/60 shadow-2xs">
+        <button
+          onClick={() => setActiveTab('azota_bank')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+            activeTab === 'azota_bank'
+              ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <Folder className="w-4 h-4 fill-amber-500 text-amber-600" />
+          <span>Kho Đề Azota Khối 12</span>
+          <span className="text-[10px] bg-sky-500 text-white font-black px-1.5 py-0.2 rounded-full">AZOTA</span>
+        </button>
+
         <button
           onClick={() => setActiveTab('exams')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
@@ -151,7 +167,7 @@ export const ExamList: React.FC<ExamListProps> = ({
           }`}
         >
           <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
-          <span>Chuyên Đề 9+ & Bẫy VDC</span>
+          <span>Chuyên Đề 7-9+ & Bẫy VDC</span>
           <span className="text-[10px] bg-rose-500 text-white font-black px-1.5 py-0.2 rounded-full">VIP 9+</span>
         </button>
 
@@ -181,6 +197,11 @@ export const ExamList: React.FC<ExamListProps> = ({
           <span className="text-[10px] bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold px-1.5 py-0.2 rounded-full border border-indigo-200/50 dark:border-indigo-800/50">AZOTA</span>
         </button>
       </div>
+
+      {/* ── SubTab 0: Kho Đề Azota Khối 12 (Folders: Môn Toán, Môn Lý, Môn Hóa) ─ */}
+      {activeTab === 'azota_bank' && (
+        <AzotaFolderView onStartExam={onStartExam} />
+      )}
 
       {/* ── SubTab 1: Chuyên Đề 9+ VDC ───────────────────────────── */}
       {activeTab === 'courses' && (

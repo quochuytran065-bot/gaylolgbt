@@ -116,9 +116,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <FileCheck2 className="w-3.5 h-3.5 text-sky-400" />
-              <span>Đề thi & Chuyên đề 9+</span>
-              <span className="px-1.5 py-0.2 rounded bg-gradient-to-r from-amber-500 to-rose-500 text-white font-extrabold text-[8px] uppercase tracking-tighter shadow-2xs">
-                VIP 9+
+              <span>Kho Đề Azota & 7-9+</span>
+              <span className="px-1.5 py-0.2 rounded bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-extrabold text-[8px] uppercase tracking-tighter shadow-2xs">
+                AZOTA VIP
               </span>
             </button>
 
@@ -550,9 +550,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <span className="flex items-center gap-2">
               <FileCheck2 className="w-4 h-4 text-sky-600" />
-              <span>📝 Đề thi & Chuyên đề 9+</span>
+              <span>📝 Kho Đề Azota & Chuyên Đề 7-9+</span>
             </span>
-            <span className="px-1.5 py-0.2 text-[9px] font-bold rounded bg-gradient-to-r from-amber-500 to-rose-500 text-white">VIP 9+</span>
+            <span className="px-1.5 py-0.2 text-[9px] font-bold rounded bg-gradient-to-r from-sky-500 to-indigo-600 text-white">AZOTA VIP</span>
           </button>
           <button
             onClick={() => { setActiveTab('arena'); setIsMobileMenuOpen(false); }}
