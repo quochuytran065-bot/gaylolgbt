@@ -1,6 +1,7 @@
 import { DocumentItem, Exam, StudyGoal, DailyStats, SubjectOverview, User } from '../types';
 import { ALL_BGD_EXAMS } from './bgdExamBank';
 import { ALL_AZOTA_GRADE12_EXAMS } from './azotaGrade12Bank';
+import { ALL_AZOTA_PHYSICS_2026_EXAMS } from './azotaPhysicsBank2026';
 import heroImg from '../assets/images/hero_digital_learning_1790863793186.jpg';
 import stemImg from '../assets/images/cover_stem_study_1790863805933.jpg';
 import humanitiesImg from '../assets/images/cover_humanities_study_1790863821410.jpg';
@@ -362,6 +363,7 @@ export const INITIAL_DOCUMENTS: DocumentItem[] = [
 ];
 
 export const INITIAL_EXAMS: Exam[] = [
+  ...ALL_AZOTA_PHYSICS_2026_EXAMS,
   ...ALL_AZOTA_GRADE12_EXAMS,
   ...ALL_BGD_EXAMS,
   {
