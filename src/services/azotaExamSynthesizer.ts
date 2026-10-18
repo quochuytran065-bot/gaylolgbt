@@ -16,6 +16,7 @@
 import { Exam, Question, Subject, QuestionOption, ChoiceKey } from '../types';
 import { ALL_AZOTA_GRADE12_EXAMS } from '../data/azotaGrade12Bank';
 import { ALL_AZOTA_PHYSICS_2026_EXAMS } from '../data/azotaPhysicsBank2026';
+import { ALL_VIETJACK_AZOTA_GRAND_EXAMS } from '../data/vietjackAzotaGrandBank2026';
 import { ALL_BGD_EXAMS } from '../data/bgdExamBank';
 import { 
   SPECIALIZED_QUESTIONS_TOAN, 
@@ -49,6 +50,7 @@ export interface AzotaFolderItem {
  */
 export function getAzotaGrade12Folders(): AzotaFolderItem[] {
   const allAvailable = [
+    ...ALL_VIETJACK_AZOTA_GRAND_EXAMS,
     ...ALL_AZOTA_GRADE12_EXAMS,
     ...ALL_AZOTA_PHYSICS_2026_EXAMS,
     ...ALL_BGD_EXAMS
@@ -95,6 +97,7 @@ export function getAzotaGrade12Folders(): AzotaFolderItem[] {
 export function getAllQuestionsBySubject(subject: Subject | 'Tất cả' | 'Tổ hợp A00'): Question[] {
   const questions: Question[] = [];
   const allExams = [
+    ...ALL_VIETJACK_AZOTA_GRAND_EXAMS,
     ...ALL_AZOTA_GRADE12_EXAMS,
     ...ALL_AZOTA_PHYSICS_2026_EXAMS,
     ...ALL_BGD_EXAMS
